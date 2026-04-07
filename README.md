@@ -1,36 +1,192 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Corporate Values Game
 
-## Getting Started
+## Описание проекта
 
-First, run the development server:
+Corporate Values Game — это интерактивная обучающая игра, разработанная с использованием современных веб-технологий.
+Цель проекта — познакомить пользователя с ключевыми ценностями и принципами компании через игровой процесс.
+
+Игрок перемещается по игровой карте, взаимодействует с NPC, принимает решения и проходит миссии, каждая из которых отражает определённую ценность компании.
+
+---
+
+## Цель проекта
+
+### Обучающая часть
+
+* Донести ценности компании в игровой форме
+* Показать влияние решений на результат
+* Развить понимание ответственности, прозрачности и скорости
+
+### Техническая часть
+
+* Продемонстрировать использование:
+
+  * Next.js
+  * Three.js
+  * Cursor AI
+  * FSD (Feature-Sliced Design)
+
+### Атмосфера
+
+* Создать вовлекающий игровой опыт
+* Использовать визуальный стиль pixel-art + sci-fi UI
+
+---
+
+## Основные ценности
+
+### Ответственность
+
+Игрок принимает решения и несёт за них последствия.
+
+### Прозрачность
+
+Игрок честно взаимодействует с NPC и открыто обсуждает проблемы.
+
+### Скорость
+
+Игрок должен находить баланс между скоростью выполнения задач и качеством.
+
+---
+
+## Принципы работы
+
+* **Право на ошибку**
+  Игрок может ошибаться без критических последствий и учиться на своих решениях
+
+* **Предпринимательский подход**
+  Игрок принимает решения, как будто управляет собственным проектом
+
+* **Открытое общение**
+  Диалоги с NPC влияют на развитие событий
+
+* **Развитие**
+  Игрок повышает рейтинг, получает опыт и улучшает результаты
+
+---
+
+## Игровая механика
+
+* Игрок перемещается по карте (WASD / стрелки / русская раскладка)
+* На карте расположены NPC, каждый отвечает за свою категорию миссий
+* При приближении к NPC появляется возможность начать диалог
+* Диалоги содержат варианты ответов
+* Ответы влияют на:
+
+  * рейтинг игрока
+  * прогресс
+  * доступ к миссиям
+* После прохождения всех миссий игрок получает итоговую оценку
+
+---
+
+## Система прогресса
+
+* Рейтинг игрока изменяется в зависимости от решений
+* Отображается количество пройденных миссий
+* Есть прогресс-бар
+* Влияние решений:
+
+  * положительные ответы → повышение рейтинга
+  * слабые ответы → снижение рейтинга
+
+---
+
+## Реализация Cursor AI
+
+В проекте реализован слой генерации контента:
+
+* Генерация диалогов NPC
+* Генерация подсказок
+* Генерация текстов миссий
+
+Для MVP используется mock-реализация, но архитектура подготовлена для подключения реального AI.
+
+---
+
+## Технологический стек
+
+* Next.js (App Router)
+* TypeScript
+* SCSS
+* Three.js / react-three-fiber
+* Feature-Sliced Design (FSD)
+
+---
+
+## Архитектура проекта (FSD)
+
+Проект организован по принципам Feature-Sliced Design:
+
+* **app** — инициализация приложения и роутинг
+* **pages** — страницы приложения
+* **entities** — сущности (player, mission, value)
+* **features** — функциональные блоки (движение, диалоги, взаимодействие)
+* **widgets** — крупные UI-блоки (игровой экран, HUD)
+* **shared** — переиспользуемые компоненты и утилиты
+
+---
+
+## Установка и запуск
+
+### Установка зависимостей
+
+```bash
+npm install
+```
+
+### Запуск проекта
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+После запуска:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Структура проекта (пример)
 
-To learn more about Next.js, take a look at the following resources:
+```text
+src/
+  app/
+  entities/
+  features/
+  widgets/
+  shared/
+  processes/
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Демо
 
-## Deploy on Vercel
+Проект можно развернуть на Vercel.
+//
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Скриншоты / Видео
+
+пока их нет
+
+---
+
+## Итог
+
+Проект демонстрирует:
+
+* игровые механики обучения
+* интеграцию AI-подхода
+* работу с современным стеком
+* архитектурный подход FSD
+
+---
+
+## Автор
+
+d1s0l, Соловьев Д.К.
