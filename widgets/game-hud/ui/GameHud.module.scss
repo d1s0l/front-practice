@@ -1,0 +1,127 @@
+@use "../../../shared/styles/variables" as *;
+
+.hud {
+  @include pixel-frame(rgba(255, 255, 255, 0.1), rgba(10, 21, 38, 0.84));
+  display: grid;
+  gap: $space-4;
+  width: min(320px, calc(100vw - 2rem));
+  border-radius: $radius-lg;
+  padding: $space-4;
+  backdrop-filter: blur(18px);
+}
+
+.hud__player,
+.hud__stats,
+.hud__progressMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.hud__avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba($color-sun, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 35%),
+    linear-gradient(180deg, $color-sun 0%, $color-sun-shadow 100%);
+}
+
+.hud__label {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: $color-text-muted;
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hud__title {
+  display: block;
+}
+
+.hud__level {
+  display: block;
+  margin-top: $space-2;
+  color: $color-text-secondary;
+  font-size: 0.8rem;
+}
+
+.hud__stats {
+  gap: $space-4;
+}
+
+.hud__item {
+  flex: 1;
+  padding: $space-3;
+  border: 1px solid rgba($color-accent-soft, 0.12);
+  border-radius: $radius-sm;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.hud__item span,
+.hud__controls span,
+.hud__progressMeta span {
+  color: $color-text-muted;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hud__item strong,
+.hud__progressMeta strong {
+  display: block;
+  margin-top: $space-2;
+  color: $color-text-primary;
+}
+
+.hud__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-2;
+}
+
+.hud__metrics span,
+.hud__timer span {
+  color: $color-text-muted;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hud__timer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-3;
+  border: 1px solid rgba($color-sun, 0.18);
+  border-radius: $radius-sm;
+  background: rgba($color-sun, 0.08);
+}
+
+.hud__timer strong {
+  color: $color-sun;
+}
+
+.hud__track {
+  overflow: hidden;
+  height: 10px;
+  margin-top: $space-2;
+  border-radius: $radius-pill;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hud__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, $color-accent 0%, $color-sun 100%);
+}
+
+.hud__controls {
+  display: grid;
+  gap: $space-2;
+}

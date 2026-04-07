@@ -1,0 +1,114 @@
+@use "../../../shared/styles/variables" as *;
+
+.dialoguePanel {
+  @include pixel-frame(rgba(255, 255, 255, 0.1), rgba(10, 21, 38, 0.82));
+  border-radius: $radius-lg;
+  padding: $space-6;
+  backdrop-filter: blur(18px);
+}
+
+.dialoguePanel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-5;
+}
+
+.dialoguePanel__eyebrow,
+.dialoguePanel__choice span {
+  font-family: var(--font-display);
+}
+
+.dialoguePanel__eyebrow {
+  margin: 0 0 $space-3;
+  color: $color-sun;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.dialoguePanel__title {
+  margin: 0;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.dialoguePanel__identity {
+  text-align: right;
+}
+
+.dialoguePanel__identity strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.dialoguePanel__identity span {
+  display: block;
+  color: $color-text-muted;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dialoguePanel__bubble {
+  padding: $space-5;
+  border: 1px solid rgba($color-accent-soft, 0.14);
+  border-radius: $radius-md;
+  background:
+    linear-gradient(180deg, rgba(121, 215, 255, 0.06), transparent 52%),
+    rgba(15, 31, 52, 0.72);
+}
+
+.dialoguePanel__bubble p {
+  margin: 0;
+  color: $color-text-secondary;
+  line-height: 1.7;
+}
+
+.dialoguePanel__choices {
+  display: grid;
+  gap: $space-3;
+  margin-top: $space-5;
+}
+
+.dialoguePanel__choice {
+  display: grid;
+  gap: $space-2;
+  width: 100%;
+  padding: $space-4;
+  border: 1px solid rgba($color-accent-soft, 0.18);
+  border-radius: $radius-md;
+  background: rgba(16, 35, 61, 0.58);
+  color: $color-text-primary;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.dialoguePanel__choice:hover {
+  transform: translateY(-2px);
+}
+
+.dialoguePanel__choice span {
+  color: $color-accent-soft;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+}
+
+.dialoguePanel__choice strong {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.dialoguePanel__choice--active {
+  border-color: rgba($color-sun, 0.54);
+  background:
+    linear-gradient(180deg, rgba($color-sun, 0.12), transparent 60%),
+    rgba(28, 43, 67, 0.92);
+  box-shadow: 0 0 0 3px rgba($color-sun, 0.12);
+}

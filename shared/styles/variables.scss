@@ -1,0 +1,71 @@
+$color-bg-top: #07111f;
+$color-bg-base: #0b1628;
+$color-bg-bottom: #14213d;
+$color-panel: #10233d;
+$color-panel-strong: #173459;
+$color-panel-soft: #20466f;
+$color-sun: #f6c94d;
+$color-sun-strong: #ffdb6a;
+$color-sun-shadow: #8d6a0f;
+$color-accent: #79d7ff;
+$color-accent-soft: #9ce3ff;
+$color-success: #73f2bd;
+$color-danger: #ff7f7f;
+$color-text-primary: #f4f7fb;
+$color-text-secondary: #a8b4c8;
+$color-text-muted: #7d8da7;
+$color-border: rgba(255, 255, 255, 0.12);
+$color-grid: rgba(156, 227, 255, 0.08);
+$color-shadow: rgba(0, 0, 0, 0.34);
+
+$radius-sm: 12px;
+$radius-md: 18px;
+$radius-lg: 28px;
+$radius-pill: 999px;
+
+$space-2: 0.5rem;
+$space-3: 0.75rem;
+$space-4: 1rem;
+$space-5: 1.25rem;
+$space-6: 1.5rem;
+$space-8: 2rem;
+$space-10: 2.5rem;
+$space-12: 3rem;
+$space-16: 4rem;
+
+$container-max: 1200px;
+
+$breakpoint-tablet: 900px;
+$breakpoint-mobile: 640px;
+
+@mixin pixel-frame($border-color: $color-sun-shadow, $background-color: rgba(16, 35, 61, 0.82)) {
+  position: relative;
+  background: $background-color;
+  border: 1px solid $border-color;
+  box-shadow:
+    0 0 0 3px rgba($border-color, 0.22),
+    0 20px 40px $color-shadow;
+
+  &::before,
+  &::after {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 2px solid $border-color;
+    content: "";
+  }
+
+  &::before {
+    top: -1px;
+    left: -1px;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  &::after {
+    right: -1px;
+    bottom: -1px;
+    border-top: 0;
+    border-left: 0;
+  }
+}

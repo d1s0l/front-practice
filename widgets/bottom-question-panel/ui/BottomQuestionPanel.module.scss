@@ -1,0 +1,63 @@
+@use "../../../shared/styles/variables" as *;
+
+.prompt {
+  @include pixel-frame(rgba(255, 255, 255, 0.1), rgba(10, 21, 38, 0.9));
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  width: min(520px, calc(100vw - 2rem));
+  border-radius: $radius-lg;
+  padding: $space-4;
+  backdrop-filter: blur(18px);
+}
+
+.prompt__icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba($color-sun, 0.32);
+  border-radius: 14px;
+  background: rgba($color-sun, 0.1);
+  color: $color-sun;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+}
+
+.prompt__eyebrow {
+  display: block;
+  margin-bottom: $space-2;
+  color: $color-accent-soft;
+  font-family: var(--font-display);
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.prompt__title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.prompt__role,
+.prompt__text {
+  margin: $space-2 0 0;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.prompt__status {
+  margin: $space-3 0 0;
+  color: $color-sun;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .prompt {
+    width: calc(100vw - 2rem);
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,108 @@
+@use "../../../shared/styles/variables" as *;
+
+.hub {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, $color-bg-top 0%, $color-bg-base 45%, $color-bg-bottom 100%);
+}
+
+.hub__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: $space-6;
+  pointer-events: none;
+}
+
+.hub__top,
+.hub__legend,
+.hub__bottom,
+.hub__dialogLayer {
+  pointer-events: auto;
+}
+
+.hub__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.hub__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba($color-accent-soft, 0.26);
+  border-radius: $radius-md;
+  background: rgba(10, 21, 38, 0.76);
+  backdrop-filter: blur(16px);
+}
+
+.hub__legend {
+  position: absolute;
+  top: 50%;
+  right: $space-6;
+  display: grid;
+  gap: $space-2;
+  padding: $space-4;
+  border: 1px solid rgba($color-accent-soft, 0.16);
+  border-radius: $radius-md;
+  background: rgba(10, 21, 38, 0.64);
+  color: $color-text-secondary;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  transform: translateY(-50%);
+  backdrop-filter: blur(16px);
+}
+
+.hub__bottom {
+  display: flex;
+  justify-content: center;
+  padding-bottom: $space-2;
+}
+
+.hub__dialogLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  align-content: end;
+  justify-items: center;
+  gap: $space-4;
+  padding: $space-6;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.28));
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .hub__overlay {
+    padding: $space-4;
+  }
+
+  .hub__legend {
+    position: static;
+    transform: none;
+    margin-top: auto;
+    margin-left: auto;
+    margin-bottom: $space-4;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .hub__top {
+    flex-direction: column;
+  }
+
+  .hub__back {
+    width: fit-content;
+  }
+
+  .hub__legend {
+    display: none;
+  }
+}

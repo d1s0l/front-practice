@@ -1,0 +1,84 @@
+@use "../../../shared/styles/variables" as *;
+
+.decisionPanel {
+  @include pixel-frame(rgba($color-sun, 0.22), rgba(10, 21, 38, 0.82));
+  border-radius: $radius-lg;
+  padding: $space-6;
+  backdrop-filter: blur(18px);
+}
+
+.decisionPanel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-5;
+}
+
+.decisionPanel__eyebrow {
+  margin: 0 0 $space-3;
+  color: $color-sun;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.decisionPanel__title {
+  margin: 0;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.decisionPanel__prompt {
+  margin: 0;
+  max-width: 64ch;
+  color: $color-text-secondary;
+  line-height: 1.7;
+}
+
+.decisionPanel__options {
+  display: grid;
+  gap: $space-3;
+  margin-top: $space-5;
+}
+
+.decisionPanel__option {
+  display: grid;
+  gap: $space-2;
+  width: 100%;
+  padding: $space-4;
+  border: 1px solid rgba($color-accent-soft, 0.18);
+  border-radius: $radius-md;
+  background: rgba(16, 35, 61, 0.58);
+  color: $color-text-primary;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.decisionPanel__option:hover {
+  transform: translateY(-2px);
+}
+
+.decisionPanel__option strong {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.decisionPanel__option span {
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.decisionPanel__option--active {
+  border-color: rgba($color-sun, 0.54);
+  background:
+    linear-gradient(180deg, rgba($color-sun, 0.12), transparent 60%),
+    rgba(28, 43, 67, 0.92);
+  box-shadow: 0 0 0 3px rgba($color-sun, 0.12);
+}

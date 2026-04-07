@@ -1,0 +1,68 @@
+@use "../../../shared/styles/variables" as *;
+
+.valueCard {
+  @include pixel-frame(rgba(255, 255, 255, 0.09), rgba(16, 35, 61, 0.76));
+  display: grid;
+  gap: $space-4;
+  min-height: 260px;
+  padding: $space-6;
+  border-radius: $radius-md;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.valueCard:hover {
+  transform: translateY(-3px);
+}
+
+.valueCard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.valueCard__label {
+  color: $color-text-muted;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.valueCard__icon {
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  box-shadow:
+    18px 0 0 currentColor,
+    0 18px 0 currentColor,
+    18px 18px 0 currentColor;
+}
+
+.valueCard__title {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.valueCard__description {
+  margin: 0;
+  color: $color-text-secondary;
+  font-size: 0.98rem;
+  line-height: 1.75;
+}
+
+.valueCard--gold {
+  color: $color-sun;
+}
+
+.valueCard--cyan {
+  color: $color-accent-soft;
+}
+
+.valueCard--mint {
+  color: $color-success;
+}

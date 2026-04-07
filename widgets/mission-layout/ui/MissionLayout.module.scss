@@ -1,0 +1,912 @@
+@use "../../../shared/styles/variables" as *;
+
+.missionPage {
+  position: relative;
+  overflow: clip;
+  min-height: 100vh;
+  padding: $space-8;
+}
+
+.missionPage__backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.missionPage__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient($color-grid 1px, transparent 1px),
+    linear-gradient(90deg, $color-grid 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.92), transparent 96%);
+}
+
+.missionPage__sun {
+  position: absolute;
+  top: 6%;
+  right: 8%;
+  width: 300px;
+  height: 300px;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 28%),
+    linear-gradient(180deg, rgba($color-accent-soft, 0.65), rgba($color-sun, 0.72));
+  opacity: 0.28;
+  transform: rotate(10deg);
+  box-shadow: 0 0 90px rgba($color-accent, 0.18);
+}
+
+.missionPage__spark,
+.missionPage__sparkAlt {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba($color-sun-strong, 0.48);
+  background: rgba($color-sun, 0.12);
+  box-shadow: 0 0 16px rgba($color-sun, 0.2);
+  animation: missionSpark 5.5s ease-in-out infinite;
+}
+
+.missionPage__spark {
+  top: 20%;
+  left: 10%;
+}
+
+.missionPage__sparkAlt {
+  right: 18%;
+  bottom: 24%;
+  animation-delay: -2.4s;
+}
+
+.missionPage__layout {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding-block: $space-8 $space-16;
+}
+
+.missionHud,
+.scenePanel,
+.briefPanel,
+.dialoguePanel,
+.decisionPanel,
+.statsPanel,
+.resultPanel {
+  @include pixel-frame(rgba(255, 255, 255, 0.1), rgba(10, 21, 38, 0.82));
+  border-radius: $radius-lg;
+  backdrop-filter: blur(18px);
+}
+
+.missionHud {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: $space-5;
+  align-items: center;
+  padding: $space-6;
+  margin-bottom: $space-6;
+}
+
+.missionHud__eyebrow,
+.scenePanel__eyebrow,
+.briefPanel__eyebrow,
+.dialoguePanel__eyebrow,
+.decisionPanel__eyebrow,
+.statsPanel__eyebrow,
+.resultPanel__eyebrow,
+.missionHud__chip strong,
+.scenePanel__tag,
+.scenePanel__playerMarker,
+.scenePanel__npcMarker {
+  font-family: var(--font-display);
+}
+
+.missionHud__eyebrow,
+.scenePanel__eyebrow,
+.briefPanel__eyebrow,
+.dialoguePanel__eyebrow,
+.decisionPanel__eyebrow,
+.statsPanel__eyebrow,
+.resultPanel__eyebrow {
+  margin: 0 0 $space-3;
+  color: $color-sun;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.missionHud__title,
+.scenePanel__title,
+.briefPanel__title,
+.dialoguePanel__title,
+.decisionPanel__title,
+.statsPanel__title,
+.resultPanel__title {
+  margin: 0;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.missionHud__title {
+  font-size: clamp(2.2rem, 4vw, 3.8rem);
+}
+
+.missionHud__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: $space-3;
+}
+
+.missionHud__chip {
+  padding: $space-3 $space-4;
+  border: 1px solid rgba($color-accent-soft, 0.16);
+  border-radius: $radius-sm;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.missionHud__chip span,
+.scenePanel__actorCard span,
+.briefPanel__subtitle,
+.dialoguePanel__identity span,
+.statsPanel__delta span,
+.resultPanel__status span {
+  display: block;
+  color: $color-text-muted;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.missionHud__chip strong {
+  display: block;
+  margin-top: $space-2;
+  color: $color-text-primary;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.missionHud__back,
+.resultPanel__primary,
+.resultPanel__secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0.85rem 1.15rem;
+  border-radius: $radius-md;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.missionHud__back,
+.resultPanel__secondary {
+  border: 1px solid rgba($color-accent-soft, 0.28);
+  background: rgba(16, 35, 61, 0.58);
+}
+
+.missionHud__back:hover,
+.resultPanel__secondary:hover {
+  transform: translateY(-2px);
+  border-color: rgba($color-accent-soft, 0.64);
+  background: rgba(20, 44, 72, 0.8);
+}
+
+.missionPage__main,
+.missionPage__interactive {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: $space-6;
+}
+
+.missionPage__interactive {
+  margin-top: $space-6;
+}
+
+.missionPage__stack {
+  display: grid;
+  gap: $space-6;
+}
+
+.scenePanel,
+.briefPanel,
+.dialoguePanel,
+.decisionPanel,
+.statsPanel,
+.resultPanel {
+  padding: $space-6;
+}
+
+.scenePanel__header,
+.dialoguePanel__header,
+.decisionPanel__header,
+.statsPanel__header,
+.resultPanel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-5;
+}
+
+.scenePanel__tag {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba($color-sun, 0.28);
+  border-radius: $radius-pill;
+  background: rgba(246, 201, 77, 0.08);
+  color: $color-sun;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.scenePanel__viewport {
+  position: relative;
+  min-height: 460px;
+  border: 1px solid rgba($color-accent-soft, 0.14);
+  border-radius: $radius-md;
+  background:
+    radial-gradient(circle at 50% 14%, rgba($color-accent-soft, 0.18), transparent 24%),
+    linear-gradient(180deg, rgba(121, 215, 255, 0.07), transparent 35%),
+    linear-gradient(180deg, #0d1728 0%, #0d1829 62%, #112038 100%);
+  overflow: hidden;
+}
+
+.scenePanel__viewport::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.04)),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 8px,
+      rgba(255, 255, 255, 0.028) 8px,
+      rgba(255, 255, 255, 0.028) 10px
+    );
+  content: "";
+}
+
+.scenePanel__gridGlow {
+  position: absolute;
+  inset: auto 12% 28% 12%;
+  height: 130px;
+  border-top: 1px solid rgba($color-accent-soft, 0.14);
+  border-bottom: 1px solid rgba($color-accent-soft, 0.1);
+  background-image:
+    linear-gradient(rgba($color-accent-soft, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba($color-accent-soft, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+  transform: perspective(160px) rotateX(68deg);
+  opacity: 0.8;
+}
+
+.scenePanel__floor {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  bottom: 15%;
+  height: 72px;
+  border: 1px solid rgba($color-sun, 0.2);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba($color-sun, 0.14), rgba($color-sun-shadow, 0.3)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 12%, transparent 12% 100%);
+}
+
+.scenePanel__terminal {
+  position: absolute;
+  right: 9%;
+  bottom: 28%;
+  display: grid;
+  gap: $space-3;
+  width: 180px;
+}
+
+.scenePanel__terminal span {
+  height: 40px;
+  border: 1px solid rgba($color-accent-soft, 0.2);
+  border-radius: 10px;
+  background: rgba(121, 215, 255, 0.08);
+  box-shadow: inset 0 0 18px rgba($color-accent, 0.08);
+}
+
+.scenePanel__drone {
+  position: absolute;
+  right: 20%;
+  top: 22%;
+  width: 58px;
+  height: 34px;
+  border: 3px solid #07111f;
+  border-radius: 8px;
+  background: linear-gradient(180deg, $color-accent-soft 0%, $color-accent 100%);
+  animation: droneFloat 4s ease-in-out infinite;
+}
+
+.scenePanel__drone span {
+  position: absolute;
+  inset: 8px 12px;
+  border: 3px solid #07111f;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.scenePanel__player,
+.scenePanel__npc {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: $space-3;
+}
+
+.scenePanel__player {
+  left: 16%;
+  bottom: 18%;
+}
+
+.scenePanel__npc {
+  right: 24%;
+  bottom: 21%;
+}
+
+.scenePanel__playerMarker,
+.scenePanel__npcMarker {
+  padding: 0.45rem 0.6rem;
+  border-radius: $radius-pill;
+  background: rgba(11, 22, 40, 0.68);
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.scenePanel__playerMarker {
+  border: 1px solid rgba($color-accent-soft, 0.22);
+  color: $color-accent-soft;
+}
+
+.scenePanel__npcMarker {
+  border: 1px solid rgba($color-sun, 0.22);
+  color: $color-sun;
+}
+
+.scenePanel__playerSprite,
+.scenePanel__npcSprite {
+  position: relative;
+}
+
+.scenePanel__playerSprite {
+  width: 122px;
+  height: 174px;
+  animation: heroIdle 3.4s ease-in-out infinite;
+}
+
+.scenePanel__npcSprite {
+  width: 102px;
+  height: 152px;
+  animation: heroIdle 3.8s ease-in-out infinite;
+  animation-delay: -1.8s;
+}
+
+.scenePanel__playerShadow,
+.scenePanel__npcShadow {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: -2px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.34);
+  filter: blur(2px);
+}
+
+.scenePanel__playerBody,
+.scenePanel__npcBody {
+  position: absolute;
+  inset: 0;
+  border: 4px solid #07111f;
+  image-rendering: pixelated;
+}
+
+.scenePanel__playerBody {
+  background:
+    linear-gradient(90deg, transparent 22px, #07111f 22px 34px, transparent 34px),
+    linear-gradient(90deg, transparent 88px, #07111f 88px 100px, transparent 100px),
+    linear-gradient(180deg, transparent 22px, #07111f 22px 34px, transparent 34px),
+    linear-gradient(180deg, transparent 122px, #07111f 122px 134px, transparent 134px),
+    linear-gradient(180deg, #f6c94d 0 50px, #173459 50px 114px, #1b2d4a 114px 100%);
+  clip-path: polygon(22% 0%, 78% 0%, 78% 18%, 92% 18%, 92% 76%, 74% 76%, 74% 100%, 56% 100%, 56% 82%, 44% 82%, 44% 100%, 26% 100%, 26% 76%, 8% 76%, 8% 18%, 22% 18%);
+}
+
+.scenePanel__npcBody {
+  background:
+    linear-gradient(90deg, transparent 18px, #07111f 18px 28px, transparent 28px),
+    linear-gradient(90deg, transparent 72px, #07111f 72px 82px, transparent 82px),
+    linear-gradient(180deg, transparent 20px, #07111f 20px 30px, transparent 30px),
+    linear-gradient(180deg, transparent 104px, #07111f 104px 114px, transparent 114px),
+    linear-gradient(180deg, $color-accent-soft 0 42px, #36567c 42px 100px, #223754 100px 100%);
+  clip-path: polygon(20% 0%, 80% 0%, 80% 18%, 92% 18%, 92% 74%, 72% 74%, 72% 100%, 54% 100%, 54% 82%, 46% 82%, 46% 100%, 28% 100%, 28% 74%, 8% 74%, 8% 18%, 20% 18%);
+}
+
+.scenePanel__playerVisor,
+.scenePanel__playerCore,
+.scenePanel__npcFace {
+  position: absolute;
+  border: 4px solid #07111f;
+}
+
+.scenePanel__playerVisor {
+  left: 34px;
+  top: 26px;
+  width: 54px;
+  height: 24px;
+  background: linear-gradient(180deg, $color-accent-soft 0%, $color-accent 100%);
+}
+
+.scenePanel__playerCore {
+  left: 44px;
+  top: 76px;
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(180deg, $color-sun-strong 0%, $color-sun 100%);
+  box-shadow: 0 0 22px rgba($color-sun, 0.22);
+}
+
+.scenePanel__npcFace {
+  left: 26px;
+  top: 24px;
+  width: 44px;
+  height: 22px;
+  background: linear-gradient(180deg, #f4f7fb 0%, $color-accent-soft 100%);
+}
+
+.scenePanel__actors {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $space-4;
+  margin-top: $space-5;
+}
+
+.scenePanel__actorCard {
+  padding: $space-4;
+  border: 1px solid rgba($color-accent-soft, 0.12);
+  border-radius: $radius-sm;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.scenePanel__actorCard strong {
+  display: block;
+  margin-top: $space-2;
+  font-size: 1rem;
+}
+
+.scenePanel__actorCard p,
+.briefPanel__text,
+.dialoguePanel__bubble p,
+.decisionPanel__prompt,
+.resultPanel__text,
+.resultPanel__consequence p {
+  margin: 0;
+  color: $color-text-secondary;
+  line-height: 1.7;
+}
+
+.scenePanel__actorCard p {
+  margin-top: $space-2;
+  font-size: 0.95rem;
+}
+
+.briefPanel {
+  display: grid;
+  gap: $space-6;
+}
+
+.briefPanel__section {
+  display: grid;
+  gap: $space-3;
+}
+
+.briefPanel__subtitle {
+  margin: 0;
+}
+
+.briefPanel__matrix {
+  display: grid;
+  gap: $space-4;
+}
+
+.briefPanel__listBlock {
+  padding: $space-4;
+  border: 1px solid rgba($color-accent-soft, 0.12);
+  border-radius: $radius-sm;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.briefPanel__list {
+  display: grid;
+  gap: $space-2;
+  margin: $space-3 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.briefPanel__list li,
+.resultPanel__consequence blockquote {
+  position: relative;
+  margin: 0;
+  padding-left: 1rem;
+  color: $color-text-secondary;
+}
+
+.briefPanel__list li::before {
+  position: absolute;
+  left: 0;
+  top: 0.48rem;
+  width: 8px;
+  height: 8px;
+  background: $color-sun;
+  content: "";
+}
+
+.dialoguePanel__identity {
+  text-align: right;
+}
+
+.dialoguePanel__identity strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.dialoguePanel__bubble {
+  padding: $space-5;
+  border: 1px solid rgba($color-accent-soft, 0.14);
+  border-radius: $radius-md;
+  background:
+    linear-gradient(180deg, rgba(121, 215, 255, 0.06), transparent 52%),
+    rgba(15, 31, 52, 0.72);
+}
+
+.dialoguePanel__choices,
+.decisionPanel__options {
+  display: grid;
+  gap: $space-3;
+  margin-top: $space-5;
+}
+
+.dialoguePanel__choice,
+.decisionPanel__option,
+.resultPanel__primary {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.dialoguePanel__choice,
+.decisionPanel__option {
+  display: grid;
+  gap: $space-2;
+  width: 100%;
+  padding: $space-4;
+  border: 1px solid rgba($color-accent-soft, 0.18);
+  border-radius: $radius-md;
+  background: rgba(16, 35, 61, 0.58);
+  color: $color-text-primary;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dialoguePanel__choice:hover,
+.decisionPanel__option:hover,
+.resultPanel__primary:hover {
+  transform: translateY(-2px);
+}
+
+.dialoguePanel__choice span {
+  color: $color-accent-soft;
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+}
+
+.dialoguePanel__choice strong,
+.decisionPanel__option strong {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.dialoguePanel__choice--active,
+.decisionPanel__option--active {
+  border-color: rgba($color-sun, 0.54);
+  background:
+    linear-gradient(180deg, rgba($color-sun, 0.12), transparent 60%),
+    rgba(28, 43, 67, 0.92);
+  box-shadow: 0 0 0 3px rgba($color-sun, 0.12);
+}
+
+.decisionPanel {
+  border-color: rgba($color-sun, 0.22);
+}
+
+.decisionPanel__prompt {
+  max-width: 64ch;
+}
+
+.decisionPanel__option span {
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.statsPanel__list {
+  display: grid;
+  gap: $space-4;
+}
+
+.statsPanel__item {
+  padding: $space-4;
+  border: 1px solid rgba($color-accent-soft, 0.12);
+  border-radius: $radius-sm;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.statsPanel__meta,
+.statsPanel__delta,
+.resultPanel__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.statsPanel__meta span {
+  color: $color-text-secondary;
+}
+
+.statsPanel__track {
+  overflow: hidden;
+  height: 12px;
+  margin-block: $space-3;
+  border-radius: $radius-pill;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.statsPanel__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, $color-accent 0%, $color-sun 100%);
+  box-shadow: 0 0 22px rgba($color-sun, 0.18);
+}
+
+.isPositive {
+  color: $color-success;
+}
+
+.isNegative {
+  color: $color-danger;
+}
+
+.resultPanel__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.85fr);
+  gap: $space-5;
+}
+
+.resultPanel__consequence,
+.resultPanel__summary {
+  padding: $space-5;
+  border: 1px solid rgba($color-accent-soft, 0.12);
+  border-radius: $radius-md;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.resultPanel__consequence h3 {
+  margin-top: 0;
+}
+
+.resultPanel__consequence blockquote {
+  margin-block: $space-4;
+  padding-left: $space-4;
+  border-left: 2px solid rgba($color-sun, 0.4);
+  font-style: normal;
+}
+
+.resultPanel__summary {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.resultPanel__status {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.resultPanel__status + .resultPanel__status {
+  margin-top: $space-4;
+  padding-top: $space-4;
+  border-top: 1px solid rgba($color-accent-soft, 0.12);
+}
+
+.resultPanel__status strong {
+  max-width: 60%;
+  text-align: right;
+}
+
+.resultPanel__text {
+  margin-top: $space-5;
+}
+
+.resultPanel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-4;
+  margin-top: $space-5;
+}
+
+.resultPanel__primary {
+  @include pixel-frame($color-sun-shadow, linear-gradient(180deg, $color-sun-strong 0%, $color-sun 100%));
+  color: #251705;
+  font-weight: 800;
+}
+
+@media (max-width: 1120px) {
+  .missionHud,
+  .missionPage__main,
+  .missionPage__interactive,
+  .resultPanel__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .missionPage {
+    padding-inline: $space-5;
+  }
+
+  .scenePanel__actors {
+    grid-template-columns: 1fr;
+  }
+
+  .missionHud__meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .missionPage {
+    padding-inline: $space-4;
+  }
+
+  .missionPage__layout {
+    padding-block: $space-6 $space-12;
+  }
+
+  .scenePanel,
+  .briefPanel,
+  .dialoguePanel,
+  .decisionPanel,
+  .statsPanel,
+  .resultPanel,
+  .missionHud {
+    padding: $space-4;
+  }
+
+  .missionHud__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .scenePanel__viewport {
+    min-height: 380px;
+  }
+
+  .scenePanel__player {
+    left: 10%;
+  }
+
+  .scenePanel__npc {
+    right: 14%;
+  }
+
+  .scenePanel__playerSprite {
+    width: 96px;
+    height: 142px;
+  }
+
+  .scenePanel__playerVisor {
+    left: 26px;
+    top: 22px;
+    width: 42px;
+    height: 20px;
+  }
+
+  .scenePanel__playerCore {
+    left: 34px;
+    top: 62px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .scenePanel__npcSprite {
+    width: 82px;
+    height: 126px;
+  }
+
+  .scenePanel__npcFace {
+    left: 20px;
+    top: 20px;
+    width: 34px;
+    height: 18px;
+  }
+
+  .scenePanel__terminal {
+    width: 120px;
+  }
+
+  .resultPanel__actions {
+    display: grid;
+  }
+
+  .resultPanel__primary,
+  .resultPanel__secondary,
+  .missionHud__back {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .missionPage__spark,
+  .missionPage__sparkAlt,
+  .scenePanel__playerSprite,
+  .scenePanel__npcSprite,
+  .scenePanel__drone,
+  .dialoguePanel__choice,
+  .decisionPanel__option,
+  .missionHud__back,
+  .resultPanel__primary,
+  .resultPanel__secondary {
+    animation: none;
+    transition: none;
+  }
+}
+
+@keyframes heroIdle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes droneFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes missionSpark {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.42;
+  }
+
+  50% {
+    transform: translate3d(8px, -10px, 0);
+    opacity: 1;
+  }
+}
