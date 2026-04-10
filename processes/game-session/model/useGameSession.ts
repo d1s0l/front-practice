@@ -543,6 +543,20 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
     };
   }, [bonusXpNotice]);
 
+  useEffect(() => {
+    if (!quickDuelOutcome) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      continueQuickDuel();
+    }, 650);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [continueQuickDuel, quickDuelOutcome]);
+
   const timerRemaining = useMemo(() => {
     if (!timerDeadline) {
       return null;

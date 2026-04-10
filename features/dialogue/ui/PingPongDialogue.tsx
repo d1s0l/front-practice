@@ -4,7 +4,6 @@ import styles from "./PingPongDialogue.module.scss";
 type PingPongDialogueProps = {
   npc: GameNpc;
   intro: string;
-  summary: string;
   questionIndex: number;
   totalQuestions: number;
   prompt: string;
@@ -23,14 +22,12 @@ type PingPongDialogueProps = {
   } | null;
   totalBonusXp: number;
   onChoose: (optionId: string) => void;
-  onContinue: () => void;
   onClose: () => void;
 };
 
 export function PingPongDialogue({
   npc,
   intro,
-  summary,
   questionIndex,
   totalQuestions,
   prompt,
@@ -39,11 +36,8 @@ export function PingPongDialogue({
   outcome,
   totalBonusXp,
   onChoose,
-  onContinue,
   onClose,
 }: PingPongDialogueProps) {
-  const isLastQuestion = questionIndex + 1 >= totalQuestions;
-
   return (
     <section className={styles.modal} aria-label="Пинг-понг диалог">
       <div className={styles.modal__header}>
@@ -95,11 +89,12 @@ export function PingPongDialogue({
           </p>
           <div className={styles.modal__actions}>
             <span className={styles.modal__xp}>{`+${outcome.awardedXp} XP за раунд`}</span>
-            <button className={styles.modal__primary} type="button" onClick={onContinue}>
-              {isLastQuestion ? "Перейти к диалогу" : "Следующий вопрос"}
-            </button>
+            <span className={styles.modal__next}>
+              {questionIndex + 1 >= totalQuestions
+                ? "Переходим к основному диалогу..."
+                : "Следующий вопрос загружается..."}
+            </span>
           </div>
-          {isLastQuestion ? <p className={styles.modal__summary}>{summary}</p> : null}
         </div>
       ) : null}
     </section>

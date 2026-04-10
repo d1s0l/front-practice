@@ -63,7 +63,6 @@ export function GameHub() {
     chooseDialogueOption,
     continueDialogue,
     answerQuickDuel,
-    continueQuickDuel,
     moveToFeedback,
     finishFeedback,
   } = useGameSession(gameNpcs, activePromptNpc);
@@ -321,7 +320,6 @@ export function GameHub() {
           <PingPongDialogue
             npc={quickDuelState.npc}
             intro={quickDuelState.npc.quickDuel?.intro ?? ""}
-            summary={quickDuelState.npc.quickDuel?.summary ?? ""}
             questionIndex={quickDuelState.questionIndex}
             totalQuestions={quickDuelState.totalQuestions}
             prompt={quickDuelState.question.prompt}
@@ -330,7 +328,6 @@ export function GameHub() {
             outcome={quickDuelState.outcome}
             totalBonusXp={quickDuelState.totalBonusXp}
             onChoose={answerQuickDuel}
-            onContinue={continueQuickDuel}
             onClose={closeQuickDuel}
           />
         </div>

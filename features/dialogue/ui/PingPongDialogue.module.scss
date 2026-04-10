@@ -44,8 +44,7 @@
 }
 
 .modal__close,
-.modal__option,
-.modal__primary {
+.modal__option {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -116,14 +115,9 @@
   text-transform: uppercase;
 }
 
-.modal__summary {
-  margin-top: $space-4 !important;
-}
-
-.modal__primary {
-  @include pixel-frame($color-sun-shadow, linear-gradient(180deg, $color-sun-strong 0%, $color-sun 100%));
-  color: #251705;
-  font-weight: 800;
+.modal__next {
+  color: $color-text-secondary;
+  font-size: 0.88rem;
 }
 
 @media (max-width: $breakpoint-mobile) {
@@ -138,8 +132,7 @@
     flex-direction: column;
   }
 
-  .modal__close,
-  .modal__primary {
+  .modal__close {
     width: 100%;
   }
 }
