@@ -6,12 +6,16 @@ type InteractionButtonProps = {
   visible: boolean;
   disabled: boolean;
   onInteract: () => void;
+  title?: string;
+  hint?: string;
 };
 
 export function InteractionButton({
   visible,
   disabled,
   onInteract,
+  title = "Диалог",
+  hint = "Открыть разговор с NPC",
 }: InteractionButtonProps) {
   return (
     <button
@@ -25,9 +29,9 @@ export function InteractionButton({
       <span className={styles.button__eyebrow}>Действие</span>
       <strong className={styles.button__title}>
         <span className={styles.button__desktopKey}>E / </span>
-        Диалог
+        {title}
       </strong>
-      <span className={styles.button__hint}>Открыть разговор с NPC</span>
+      <span className={styles.button__hint}>{hint}</span>
     </button>
   );
 }

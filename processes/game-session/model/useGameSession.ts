@@ -1,7 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { GameNpc, NpcChoice, NpcStage, ScoreDelta } from "@/shared/config/game-npcs";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type {
+  GameNpc,
+  NpcChoice,
+  NpcStage,
+  QuickDuelQuestion,
+  ScoreDelta,
+} from "@/shared/config/game-npcs";
 import {
   generateDialogue,
   generateHint,
@@ -25,6 +31,30 @@ type StageOutcome = {
   canRetry: boolean;
   willAdvance: boolean;
   willCompleteNpc: boolean;
+};
+
+type QuickDuelOutcome = {
+  selectedOptionId: string | null;
+  isCorrect: boolean;
+  isFast: boolean;
+  awardedXp: number;
+  message: string;
+  isTimeout: boolean;
+};
+
+type QuickDuelState = {
+  npc: GameNpc;
+  question: QuickDuelQuestion;
+  questionIndex: number;
+  totalQuestions: number;
+  timeRemaining: number | null;
+  outcome: QuickDuelOutcome | null;
+  totalBonusXp: number;
+};
+
+type BonusXpNotice = {
+  amount: number;
+  label: string;
 };
 
 type FinalStep = "summary" | "feedback" | "done" | null;
@@ -57,6 +87,26 @@ function getStageForNpc(stageIndexes: Record<string, number>, npc: GameNpc) {
   return npc.stages[getStageIndex(stageIndexes, npc)] ?? npc.stages[npc.stages.length - 1];
 }
 
+function buildQuickDuelMessage(
+  npc: GameNpc,
+  question: QuickDuelQuestion,
+  outcome: Pick<QuickDuelOutcome, "isCorrect" | "isFast" | "awardedXp" | "isTimeout">
+) {
+  if (outcome.isTimeout) {
+    return `${npc.name}: время вышло. Ты получил базовый XP за попытку, но потерял шанс на бонус за скорость и точность.`;
+  }
+
+  if (outcome.isCorrect && outcome.isFast) {
+    return `${npc.name}: отлично, это быстрый и точный ответ. +${outcome.awardedXp} XP за темп и ясность.`;
+  }
+
+  if (outcome.isCorrect) {
+    return `${npc.name}: ответ верный. Ты удержал смысл вопроса "${question.id}" и получил +${outcome.awardedXp} XP.`;
+  }
+
+  return `${npc.name}: ответ не лучший, но ты всё равно получаешь +${outcome.awardedXp} XP за участие в раунде.`;
+}
+
 export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
   const [openedNpcSlug, setOpenedNpcSlug] = useState<string | null>(null);
   const [scores, setScores] = useState<ScoreState>(initialScores);
@@ -67,10 +117,24 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
   const [timerNow, setTimerNow] = useState(() => Date.now());
   const [finalStep, setFinalStep] = useState<FinalStep>(null);
   const [feedback, setFeedback] = useState("");
+  const [quickDuelNpcSlug, setQuickDuelNpcSlug] = useState<string | null>(null);
+  const [quickDuelQuestionIndex, setQuickDuelQuestionIndex] = useState(0);
+  const [quickDuelOutcome, setQuickDuelOutcome] = useState<QuickDuelOutcome | null>(null);
+  const [quickDuelStartedAt, setQuickDuelStartedAt] = useState<number | null>(null);
+  const [quickDuelDeadline, setQuickDuelDeadline] = useState<number | null>(null);
+  const [quickDuelCompletedSlugs, setQuickDuelCompletedSlugs] = useState<string[]>([]);
+  const [quickDuelBonusXp, setQuickDuelBonusXp] = useState(0);
+  const [bonusXpNotice, setBonusXpNotice] = useState<BonusXpNotice | null>(null);
+  const timeoutTriggeredRef = useRef(false);
+  const quickDuelTimeoutTriggeredRef = useRef(false);
 
   const openedNpc = useMemo(
     () => npcs.find((npc) => npc.slug === openedNpcSlug) ?? null,
     [npcs, openedNpcSlug]
+  );
+  const quickDuelNpc = useMemo(
+    () => npcs.find((npc) => npc.slug === quickDuelNpcSlug) ?? null,
+    [npcs, quickDuelNpcSlug]
   );
 
   const currentStage = useMemo(() => {
@@ -80,6 +144,14 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
 
     return getStageForNpc(stageIndexes, openedNpc);
   }, [openedNpc, stageIndexes]);
+
+  const quickDuelQuestion = useMemo(() => {
+    if (!quickDuelNpc?.quickDuel) {
+      return null;
+    }
+
+    return quickDuelNpc.quickDuel.questions[quickDuelQuestionIndex] ?? null;
+  }, [quickDuelNpc, quickDuelQuestionIndex]);
 
   const previewPromptNpc = previewNpc ?? openedNpc ?? null;
 
@@ -105,12 +177,44 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
     );
   }, [completedNpcSlugs, previewPromptNpc, stageIndexes]);
 
+  const quickDuelTimeRemaining = useMemo(() => {
+    if (!quickDuelDeadline) {
+      return null;
+    }
+
+    return Math.max(0, Math.ceil((quickDuelDeadline - timerNow) / 1000));
+  }, [quickDuelDeadline, timerNow]);
+
+  const quickDuelState: QuickDuelState | null = useMemo(() => {
+    if (!quickDuelNpc || !quickDuelQuestion || !quickDuelNpc.quickDuel) {
+      return null;
+    }
+
+    return {
+      npc: quickDuelNpc,
+      question: quickDuelQuestion,
+      questionIndex: quickDuelQuestionIndex,
+      totalQuestions: quickDuelNpc.quickDuel.questions.length,
+      timeRemaining: quickDuelTimeRemaining,
+      outcome: quickDuelOutcome,
+      totalBonusXp: quickDuelBonusXp,
+    };
+  }, [
+    quickDuelBonusXp,
+    quickDuelNpc,
+    quickDuelOutcome,
+    quickDuelQuestion,
+    quickDuelQuestionIndex,
+    quickDuelTimeRemaining,
+  ]);
+
   const level = Math.floor(scores.xp / 60) + 1;
 
-  const openNpc = useCallback(
+  const openDialogueForNpc = useCallback(
     (npc: GameNpc) => {
       setOpenedNpcSlug(npc.slug);
       setStageOutcome(null);
+      timeoutTriggeredRef.current = false;
       const stage = getStageForNpc(stageIndexes, npc);
       setTimerDeadline(
         stage.pressureSeconds ? Date.now() + stage.pressureSeconds * 1000 : null
@@ -119,10 +223,82 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
     [stageIndexes]
   );
 
+  const openNpc = useCallback(
+    (npc: GameNpc) => {
+      openDialogueForNpc(npc);
+    },
+    [openDialogueForNpc]
+  );
+
+  const clearQuickDuel = useCallback(() => {
+    setQuickDuelNpcSlug(null);
+    setQuickDuelQuestionIndex(0);
+    setQuickDuelOutcome(null);
+    setQuickDuelStartedAt(null);
+    setQuickDuelDeadline(null);
+    setQuickDuelBonusXp(0);
+    quickDuelTimeoutTriggeredRef.current = false;
+  }, []);
+
+  const startQuickDuel = useCallback(
+    (npc: GameNpc) => {
+      const firstQuestion = npc.quickDuel?.questions[0];
+
+      if (!firstQuestion) {
+        openDialogueForNpc(npc);
+        return;
+      }
+
+      setOpenedNpcSlug(null);
+      setStageOutcome(null);
+      setTimerDeadline(null);
+      setQuickDuelNpcSlug(npc.slug);
+      setQuickDuelQuestionIndex(0);
+      setQuickDuelOutcome(null);
+      setQuickDuelBonusXp(0);
+      setQuickDuelStartedAt(Date.now());
+      setQuickDuelDeadline(Date.now() + firstQuestion.timeLimitSeconds * 1000);
+      quickDuelTimeoutTriggeredRef.current = false;
+    },
+    [openDialogueForNpc]
+  );
+
+  const startInteraction = useCallback(
+    (npc: GameNpc) => {
+      if (npc.quickDuel && !quickDuelCompletedSlugs.includes(npc.slug)) {
+        startQuickDuel(npc);
+        return;
+      }
+
+      openDialogueForNpc(npc);
+    },
+    [openDialogueForNpc, quickDuelCompletedSlugs, startQuickDuel]
+  );
+
   const closeDialogue = useCallback(() => {
     setOpenedNpcSlug(null);
     setStageOutcome(null);
     setTimerDeadline(null);
+    timeoutTriggeredRef.current = false;
+  }, []);
+
+  const closeQuickDuel = useCallback(() => {
+    clearQuickDuel();
+  }, [clearQuickDuel]);
+
+  const clearBonusXpNotice = useCallback(() => {
+    setBonusXpNotice(null);
+  }, []);
+
+  const addBonusXp = useCallback((amount: number, label: string) => {
+    setScores((current) => ({
+      ...current,
+      xp: current.xp + amount,
+    }));
+    setBonusXpNotice({
+      amount,
+      label,
+    });
   }, []);
 
   const applyChoiceOutcome = useCallback(
@@ -154,9 +330,90 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
         willCompleteNpc,
       });
       setTimerDeadline(null);
+      timeoutTriggeredRef.current = true;
     },
     [stageIndexes]
   );
+
+  const resolveQuickDuelAnswer = useCallback(
+    (selectedOptionId: string | null, isTimeout = false) => {
+      if (!quickDuelNpc || !quickDuelQuestion || !quickDuelNpc.quickDuel || quickDuelOutcome) {
+        return;
+      }
+
+      const selectedOption = quickDuelQuestion.options.find(
+        (option) => option.id === selectedOptionId
+      );
+      const elapsedMs = quickDuelStartedAt ? Date.now() - quickDuelStartedAt : Infinity;
+      const isCorrect = selectedOption?.isCorrect ?? false;
+      const isFast =
+        !isTimeout && isCorrect && elapsedMs <= quickDuelQuestion.fastBonusThresholdMs;
+      const awardedXp =
+        quickDuelQuestion.xpReward.attempt +
+        (isCorrect ? quickDuelQuestion.xpReward.correct : 0) +
+        (isFast ? quickDuelQuestion.xpReward.fastBonus : 0);
+
+      if (awardedXp > 0) {
+        addBonusXp(awardedXp, isFast ? "speed bonus" : "ping-pong");
+        setQuickDuelBonusXp((current) => current + awardedXp);
+      }
+
+      setQuickDuelOutcome({
+        selectedOptionId,
+        isCorrect,
+        isFast,
+        awardedXp,
+        isTimeout,
+        message: buildQuickDuelMessage(quickDuelNpc, quickDuelQuestion, {
+          isCorrect,
+          isFast,
+          awardedXp,
+          isTimeout,
+        }),
+      });
+      setQuickDuelDeadline(null);
+      quickDuelTimeoutTriggeredRef.current = true;
+    },
+    [addBonusXp, quickDuelNpc, quickDuelOutcome, quickDuelQuestion, quickDuelStartedAt]
+  );
+
+  const answerQuickDuel = useCallback(
+    (optionId: string) => {
+      resolveQuickDuelAnswer(optionId);
+    },
+    [resolveQuickDuelAnswer]
+  );
+
+  const continueQuickDuel = useCallback(() => {
+    if (!quickDuelNpc || !quickDuelNpc.quickDuel || !quickDuelOutcome) {
+      return;
+    }
+
+    const nextIndex = quickDuelQuestionIndex + 1;
+
+    if (nextIndex >= quickDuelNpc.quickDuel.questions.length) {
+      setQuickDuelCompletedSlugs((current) =>
+        current.includes(quickDuelNpc.slug) ? current : [...current, quickDuelNpc.slug]
+      );
+      clearQuickDuel();
+      openDialogueForNpc(quickDuelNpc);
+      return;
+    }
+
+    const nextQuestion = quickDuelNpc.quickDuel.questions[nextIndex];
+
+    setQuickDuelQuestionIndex(nextIndex);
+    setQuickDuelOutcome(null);
+    setQuickDuelStartedAt(Date.now());
+    setQuickDuelDeadline(Date.now() + nextQuestion.timeLimitSeconds * 1000);
+    quickDuelTimeoutTriggeredRef.current = false;
+  }, [
+    clearQuickDuel,
+    openDialogueForNpc,
+    quickDuelNpc,
+    quickDuelOutcome,
+    quickDuelQuestionIndex,
+  ]);
 
   const chooseDialogueOption = useCallback(
     (choiceId: string) => {
@@ -187,6 +444,7 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
       setOpenedNpcSlug(null);
       setStageOutcome(null);
       setTimerDeadline(null);
+      timeoutTriggeredRef.current = false;
       return;
     }
 
@@ -199,10 +457,12 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
       }));
 
       const nextStage = openedNpc.stages[nextIndex] ?? null;
+      timeoutTriggeredRef.current = false;
       setTimerDeadline(
         nextStage?.pressureSeconds ? Date.now() + nextStage.pressureSeconds * 1000 : null
       );
     } else {
+      timeoutTriggeredRef.current = false;
       setTimerDeadline(
         currentStage.pressureSeconds ? Date.now() + currentStage.pressureSeconds * 1000 : null
       );
@@ -220,9 +480,11 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
         currentStage?.pressureSeconds &&
         !stageOutcome &&
         timerDeadline &&
+        !timeoutTriggeredRef.current &&
         Date.now() >= timerDeadline &&
         currentStage.timeout
       ) {
+        timeoutTriggeredRef.current = true;
         applyChoiceOutcome(
           openedNpc,
           currentStage,
@@ -237,12 +499,49 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
           currentStage.timeout.responseSeed
         );
       }
+
+      if (
+        quickDuelNpc &&
+        quickDuelQuestion &&
+        !quickDuelOutcome &&
+        quickDuelDeadline &&
+        !quickDuelTimeoutTriggeredRef.current &&
+        Date.now() >= quickDuelDeadline
+      ) {
+        quickDuelTimeoutTriggeredRef.current = true;
+        resolveQuickDuelAnswer(null, true);
+      }
     }, 250);
 
     return () => {
       window.clearInterval(interval);
     };
-  }, [applyChoiceOutcome, currentStage, openedNpc, stageOutcome, timerDeadline]);
+  }, [
+    applyChoiceOutcome,
+    currentStage,
+    openedNpc,
+    quickDuelDeadline,
+    quickDuelNpc,
+    quickDuelOutcome,
+    quickDuelQuestion,
+    resolveQuickDuelAnswer,
+    stageOutcome,
+    timerDeadline,
+  ]);
+
+  useEffect(() => {
+    if (!bonusXpNotice) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setBonusXpNotice(null);
+    }, 2400);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [bonusXpNotice]);
 
   const timerRemaining = useMemo(() => {
     if (!timerDeadline) {
@@ -267,11 +566,19 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
     timerRemaining,
     finalStep: effectiveFinalStep,
     feedback,
+    bonusXpNotice,
+    quickDuelState,
+    quickDuelCompletedSlugs,
     setFeedback,
     openNpc,
+    startInteraction,
     closeDialogue,
+    closeQuickDuel,
+    clearBonusXpNotice,
     chooseDialogueOption,
     continueDialogue,
+    answerQuickDuel,
+    continueQuickDuel,
     moveToFeedback: () => setFinalStep("feedback"),
     finishFeedback: () => setFinalStep("done"),
   };

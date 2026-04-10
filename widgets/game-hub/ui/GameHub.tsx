@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { gameNpcs } from "@/shared/config/game-npcs";
 import { isInteractionKey } from "@/shared/lib/controls";
+import { catCompanion, roomBounds } from "@/shared/config/world-objects";
 import { usePlayerMovement } from "@/features/player-movement/model/usePlayerMovement";
 import { useZoneInteraction } from "@/features/zone-interaction/model/useZoneInteraction";
 import { DialogueModal } from "@/features/dialogue/ui/DialogueModal";
+import { PingPongDialogue } from "@/features/dialogue/ui/PingPongDialogue";
 import { BottomQuestionPanel } from "@/widgets/bottom-question-panel/ui/BottomQuestionPanel";
+import { BonusXpToast } from "@/widgets/game-hud/ui/BonusXpToast";
 import { GameHud } from "@/widgets/game-hud/ui/GameHud";
 import { InteractionButton } from "@/widgets/game-hub/ui/InteractionButton";
 import { MobileControls } from "@/widgets/game-hub/ui/MobileControls";
@@ -19,14 +22,8 @@ import { PlayerScene } from "@/widgets/player-scene/ui/PlayerScene";
 import { useGameSession } from "@/processes/game-session/model/useGameSession";
 import styles from "./GameHub.module.scss";
 
-const movementBounds = {
-  minX: -6.6,
-  maxX: 6.6,
-  minZ: -4.2,
-  maxZ: 4.2,
-};
-
 export function GameHub() {
+  const [catPetPulse, setCatPetPulse] = useState(0);
   const {
     position,
     facing,
@@ -34,7 +31,7 @@ export function GameHub() {
     setDirectionPressed,
     clearDirections,
   } = usePlayerMovement({
-    bounds: movementBounds,
+    bounds: roomBounds,
     initialPosition: { x: 0, z: 3.2 },
     speed: 4.5,
   });
@@ -56,30 +53,125 @@ export function GameHub() {
     timerRemaining,
     finalStep,
     feedback,
+    bonusXpNotice,
+    quickDuelState,
+    quickDuelCompletedSlugs,
     setFeedback,
-    openNpc,
+    startInteraction,
     closeDialogue,
+    closeQuickDuel,
     chooseDialogueOption,
     continueDialogue,
+    answerQuickDuel,
+    continueQuickDuel,
     moveToFeedback,
     finishFeedback,
   } = useGameSession(gameNpcs, activePromptNpc);
 
+  const catDistance = useMemo(
+    () =>
+      Math.hypot(position.x - catCompanion.position.x, position.z - catCompanion.position.z),
+    [position.x, position.z]
+  );
+  const canPetCat = catDistance <= catCompanion.activationRadius;
+  const isAnyOverlayOpen = Boolean(openedNpc || quickDuelState || finalStep);
+  const shouldShowCatPrompt = canPetCat && !activePromptNpc && !isAnyOverlayOpen;
+
+  const promptOverride = useMemo(() => {
+    if (shouldShowCatPrompt) {
+      return {
+        eyebrow: catCompanion.sectorCode,
+        title: catCompanion.name,
+        role: `${catCompanion.role} · ${catCompanion.valueLabel}`,
+        text: catCompanion.description,
+        status: catCompanion.promptText,
+      };
+    }
+
+    if (
+      !openedNpc &&
+      activePromptNpc?.quickDuel &&
+      !quickDuelCompletedSlugs.includes(activePromptNpc.slug)
+    ) {
+      return {
+        eyebrow: activePromptNpc.sectorCode,
+        title: `${activePromptNpc.name} · rapid sync`,
+        role: `${activePromptNpc.role} · пинг-понг вопросов`,
+        text: activePromptNpc.quickDuel.intro,
+        status: "Нажмите E / У, чтобы начать быстрый раунд",
+      };
+    }
+
+    return null;
+  }, [activePromptNpc, openedNpc, quickDuelCompletedSlugs, shouldShowCatPrompt]);
+
+  const interactionButtonCopy = useMemo(() => {
+    if (shouldShowCatPrompt) {
+      return {
+        title: "Погладить",
+        hint: catCompanion.interactionHint,
+      };
+    }
+
+    if (
+      activePromptNpc?.quickDuel &&
+      !quickDuelCompletedSlugs.includes(activePromptNpc.slug)
+    ) {
+      return {
+        title: "Рапид-раунд",
+        hint: "Запустить пинг-понг с bonus XP",
+      };
+    }
+
+    return {
+      title: "Диалог",
+      hint: "Открыть разговор с NPC",
+    };
+  }, [activePromptNpc, quickDuelCompletedSlugs, shouldShowCatPrompt]);
+
   const handleInteract = useCallback(() => {
-    if (!canInteract || !activeNpc || openedNpc) {
+    if (openedNpc || quickDuelState || finalStep) {
       return;
     }
 
-    openNpc(activeNpc);
-  }, [activeNpc, canInteract, openNpc, openedNpc]);
+    if (shouldShowCatPrompt) {
+      setCatPetPulse((current) => current + 1);
+      return;
+    }
+
+    if (!canInteract || !activeNpc) {
+      return;
+    }
+
+    startInteraction(activeNpc);
+  }, [
+    activeNpc,
+    canInteract,
+    finalStep,
+    openedNpc,
+    quickDuelState,
+    shouldShowCatPrompt,
+    startInteraction,
+  ]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (canInteract && activeNpc && !openedNpc && isInteractionKey(event)) {
+      if (
+        !openedNpc &&
+        !quickDuelState &&
+        !finalStep &&
+        (shouldShowCatPrompt || (canInteract && activeNpc)) &&
+        isInteractionKey(event)
+      ) {
         handleInteract();
       }
 
       if (event.key === "Escape") {
+        if (quickDuelState) {
+          closeQuickDuel();
+          return;
+        }
+
         closeDialogue();
       }
     };
@@ -89,7 +181,17 @@ export function GameHub() {
     return () => {
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [activeNpc, canInteract, closeDialogue, handleInteract, openedNpc]);
+  }, [
+    activeNpc,
+    canInteract,
+    closeDialogue,
+    closeQuickDuel,
+    finalStep,
+    handleInteract,
+    openedNpc,
+    quickDuelState,
+    shouldShowCatPrompt,
+  ]);
 
   useEffect(
     () => () => {
@@ -99,10 +201,10 @@ export function GameHub() {
   );
 
   useEffect(() => {
-    if (openedNpc) {
+    if (openedNpc || quickDuelState) {
       clearDirections();
     }
-  }, [clearDirections, openedNpc]);
+  }, [clearDirections, openedNpc, quickDuelState]);
 
   return (
     <main className={styles.hub}>
@@ -112,6 +214,8 @@ export function GameHub() {
         isMoving={isMoving}
         activeNpcSlug={activePromptNpc?.slug}
         npcs={gameNpcs}
+        catIsNearby={shouldShowCatPrompt}
+        catPetPulse={catPetPulse}
       />
 
       <div className={styles.hub__overlay}>
@@ -136,24 +240,27 @@ export function GameHub() {
 
         <div className={styles.hub__legend}>
           <span>Подойди к NPC</span>
-          <span>Нажми E или У для диалога</span>
+          <span>Нажми E или У для действия</span>
           <span>Ошибки не завершают игру, но меняют метрики</span>
         </div>
 
         <div className={styles.hub__bottom}>
           <BottomQuestionPanel
-            npc={!openedNpc ? activePromptNpc : null}
+            npc={!openedNpc && !shouldShowCatPrompt ? activePromptNpc : null}
             generatedDescription={promptContent?.description ?? null}
             isCompleted={activePromptNpc ? completedNpcSlugs.includes(activePromptNpc.slug) : false}
+            promptOverride={!openedNpc ? promptOverride : null}
           />
           <InteractionButton
-            visible={!openedNpc && canInteract}
-            disabled={!canInteract}
+            visible={!openedNpc && !quickDuelState && (canInteract || shouldShowCatPrompt)}
+            disabled={!canInteract && !shouldShowCatPrompt}
             onInteract={handleInteract}
+            title={interactionButtonCopy.title}
+            hint={interactionButtonCopy.hint}
           />
         </div>
 
-        {!openedNpc ? (
+        {!openedNpc && !quickDuelState ? (
           <div className={styles.hub__mobileControls}>
             <div className={styles.hub__mobileControlsLeft}>
               <MobileControls
@@ -164,22 +271,29 @@ export function GameHub() {
 
             <div className={styles.hub__mobileControlsRight}>
               <BottomQuestionPanel
-                npc={activePromptNpc}
+                npc={!shouldShowCatPrompt ? activePromptNpc : null}
                 generatedDescription={promptContent?.description ?? null}
                 isCompleted={
                   activePromptNpc ? completedNpcSlugs.includes(activePromptNpc.slug) : false
                 }
                 compact
+                promptOverride={promptOverride}
               />
               <InteractionButton
-                visible={canInteract}
-                disabled={!canInteract}
+                visible={canInteract || shouldShowCatPrompt}
+                disabled={!canInteract && !shouldShowCatPrompt}
                 onInteract={handleInteract}
+                title={interactionButtonCopy.title}
+                hint={interactionButtonCopy.hint}
               />
             </div>
           </div>
         ) : null}
       </div>
+
+      {bonusXpNotice ? (
+        <BonusXpToast amount={bonusXpNotice.amount} label={bonusXpNotice.label} />
+      ) : null}
 
       {openedNpc && currentStage ? (
         <div className={styles.hub__dialogLayer}>
@@ -198,6 +312,26 @@ export function GameHub() {
             onChoose={chooseDialogueOption}
             onContinue={continueDialogue}
             onClose={closeDialogue}
+          />
+        </div>
+      ) : null}
+
+      {quickDuelState ? (
+        <div className={styles.hub__dialogLayer}>
+          <PingPongDialogue
+            npc={quickDuelState.npc}
+            intro={quickDuelState.npc.quickDuel?.intro ?? ""}
+            summary={quickDuelState.npc.quickDuel?.summary ?? ""}
+            questionIndex={quickDuelState.questionIndex}
+            totalQuestions={quickDuelState.totalQuestions}
+            prompt={quickDuelState.question.prompt}
+            options={quickDuelState.question.options}
+            timeRemaining={quickDuelState.timeRemaining}
+            outcome={quickDuelState.outcome}
+            totalBonusXp={quickDuelState.totalBonusXp}
+            onChoose={answerQuickDuel}
+            onContinue={continueQuickDuel}
+            onClose={closeQuickDuel}
           />
         </div>
       ) : null}

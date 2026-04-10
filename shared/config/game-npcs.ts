@@ -31,6 +31,31 @@ export type NpcStage = {
   };
 };
 
+export type QuickDuelOption = {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+};
+
+export type QuickDuelQuestion = {
+  id: string;
+  prompt: string;
+  timeLimitSeconds: number;
+  fastBonusThresholdMs: number;
+  options: QuickDuelOption[];
+  xpReward: {
+    correct: number;
+    fastBonus: number;
+    attempt: number;
+  };
+};
+
+export type QuickDuelConfig = {
+  intro: string;
+  summary: string;
+  questions: QuickDuelQuestion[];
+};
+
 export type GameNpc = {
   slug: "responsibility" | "transparency" | "speed";
   name: string;
@@ -49,6 +74,7 @@ export type GameNpc = {
     domain: string;
   };
   stages: NpcStage[];
+  quickDuel?: QuickDuelConfig;
 };
 
 export const gameNpcs: GameNpc[] = [
@@ -199,6 +225,98 @@ export const gameNpcs: GameNpc[] = [
     aiProfile: {
       personality: "аналитичный коммуникатор",
       domain: "прозрачность и доверие",
+    },
+    quickDuel: {
+      intro:
+        "Макс предлагает быстрый пинг-понг вопросов: отвечай чётко и быстро, чтобы заработать bonus XP до основного диалога.",
+      summary:
+        "Раунд завершён. Быстрые и точные ответы усиливают прозрачность и приносят дополнительный XP перед основной веткой.",
+      questions: [
+        {
+          id: "sync-open",
+          prompt: "Команда увидела риск в отчёте за 3 минуты до встречи. Что говорим первым сообщением?",
+          timeLimitSeconds: 8,
+          fastBonusThresholdMs: 3200,
+          xpReward: {
+            correct: 12,
+            fastBonus: 8,
+            attempt: 3,
+          },
+          options: [
+            {
+              id: "sync-open-plan",
+              text: "Честно обозначаем риск и сразу даём план исправления.",
+              isCorrect: true,
+            },
+            {
+              id: "sync-open-hide",
+              text: "Показываем только сильные стороны, проблему обсудим потом.",
+              isCorrect: false,
+            },
+            {
+              id: "sync-open-chaos",
+              text: "Пусть каждый объяснит ситуацию по-своему, чтобы не терять время.",
+              isCorrect: false,
+            },
+          ],
+        },
+        {
+          id: "sync-status",
+          prompt: "У двух людей разные статусы по одному риску. Как быстро выравниваешь коммуникацию?",
+          timeLimitSeconds: 7,
+          fastBonusThresholdMs: 2800,
+          xpReward: {
+            correct: 10,
+            fastBonus: 6,
+            attempt: 3,
+          },
+          options: [
+            {
+              id: "sync-status-shared",
+              text: "Собираю единый апдейт и фиксирую одну версию статуса для всех.",
+              isCorrect: true,
+            },
+            {
+              id: "sync-status-silent",
+              text: "Лучше ограничить круг людей, чтобы наружу вообще никто не говорил.",
+              isCorrect: false,
+            },
+            {
+              id: "sync-status-delay",
+              text: "Подождём до конца дня, чтобы разобраться, кто прав.",
+              isCorrect: false,
+            },
+          ],
+        },
+        {
+          id: "sync-clarity",
+          prompt: "Клиент задаёт лишние вопросы. Как не утонуть в деталях, но не потерять доверие?",
+          timeLimitSeconds: 7,
+          fastBonusThresholdMs: 2600,
+          xpReward: {
+            correct: 12,
+            fastBonus: 8,
+            attempt: 3,
+          },
+          options: [
+            {
+              id: "sync-clarity-frame",
+              text: "Даём короткий критичный контекст, не скрывая риск и следующий шаг.",
+              isCorrect: true,
+            },
+            {
+              id: "sync-clarity-overshare",
+              text: "Сразу выгружаем весь внутренний поток обсуждений без фильтра.",
+              isCorrect: false,
+            },
+            {
+              id: "sync-clarity-deflect",
+              text: "Уходим от ответа и обещаем вернуться позже.",
+              isCorrect: false,
+            },
+          ],
+        },
+      ],
     },
     stages: [
       {

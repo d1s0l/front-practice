@@ -1,7 +1,8 @@
 "use client";
 
+import { RoundedBox } from "@react-three/drei";
 import { useMemo, useRef } from "react";
-import { Group } from "three";
+import type { Group } from "three";
 import { useFrame } from "@react-three/fiber";
 import type { PlayerFacing, PlayerPosition } from "@/entities/player/model/types";
 
@@ -42,22 +43,18 @@ export function PlayerActor({ position, facing, isMoving }: PlayerActorProps) {
 
   return (
     <group ref={groupRef}>
-      <mesh position={[0, 0.55, 0]} castShadow>
-        <boxGeometry args={[0.72, 1.05, 0.58]} />
+      <RoundedBox args={[0.72, 1.05, 0.58]} radius={0.08} smoothness={5} position={[0, 0.55, 0]} castShadow>
         <meshStandardMaterial color="#173459" />
-      </mesh>
-      <mesh position={[0, 1.26, 0]} castShadow>
-        <boxGeometry args={[0.68, 0.62, 0.58]} />
+      </RoundedBox>
+      <RoundedBox args={[0.68, 0.62, 0.58]} radius={0.08} smoothness={5} position={[0, 1.26, 0]} castShadow>
         <meshStandardMaterial color="#f6c94d" />
-      </mesh>
-      <mesh position={[0, 1.22, 0.3]}>
-        <boxGeometry args={[0.42, 0.18, 0.08]} />
+      </RoundedBox>
+      <RoundedBox args={[0.42, 0.18, 0.08]} radius={0.04} smoothness={4} position={[0, 1.22, 0.3]}>
         <meshStandardMaterial color="#79d7ff" emissive="#79d7ff" emissiveIntensity={0.9} />
-      </mesh>
-      <mesh position={[0, 0.6, 0.34]}>
-        <boxGeometry args={[0.18, 0.18, 0.08]} />
+      </RoundedBox>
+      <RoundedBox args={[0.18, 0.18, 0.08]} radius={0.03} smoothness={4} position={[0, 0.6, 0.34]}>
         <meshStandardMaterial color="#f6c94d" emissive="#f6c94d" emissiveIntensity={1.2} />
-      </mesh>
+      </RoundedBox>
       <mesh position={[0, -0.02, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.42, 24]} />
         <meshBasicMaterial color="#000000" transparent opacity={0.22} />

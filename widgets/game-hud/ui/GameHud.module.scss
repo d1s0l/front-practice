@@ -4,9 +4,9 @@
   @include pixel-frame(rgba(255, 255, 255, 0.1), rgba(10, 21, 38, 0.84));
   display: grid;
   gap: $space-4;
-  width: min(320px, calc(100vw - 2rem));
+  width: min(100%, clamp(20rem, 18vw + 12rem, 28rem));
   border-radius: $radius-lg;
-  padding: $space-4;
+  padding: clamp($space-4, 0.8vw + 0.7rem, $space-6);
   backdrop-filter: blur(18px);
 }
 
@@ -45,13 +45,14 @@
 
 .hud__title {
   display: block;
+  font-size: clamp(1rem, 0.35vw + 0.96rem, 1.22rem);
 }
 
 .hud__level {
   display: block;
   margin-top: $space-2;
   color: $color-text-secondary;
-  font-size: 0.8rem;
+  font-size: clamp(0.8rem, 0.18vw + 0.76rem, 0.92rem);
 }
 
 .hud__mobileLabel {
@@ -74,7 +75,7 @@
 .hud__controls span,
 .hud__progressMeta span {
   color: $color-text-muted;
-  font-size: 0.74rem;
+  font-size: clamp(0.72rem, 0.14vw + 0.69rem, 0.82rem);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -95,9 +96,49 @@
 .hud__metrics span,
 .hud__timer span {
   color: $color-text-muted;
-  font-size: 0.72rem;
+  font-size: clamp(0.7rem, 0.14vw + 0.68rem, 0.8rem);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+@media (min-width: 1440px) {
+  .hud {
+    gap: $space-5;
+  }
+}
+
+@media (min-width: 2000px) {
+  .hud {
+    width: min(100%, 31rem);
+    gap: $space-6;
+    padding: $space-6;
+  }
+
+  .hud__avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+  }
+
+  .hud__title {
+    font-size: 1.3rem;
+  }
+
+  .hud__level {
+    font-size: 0.98rem;
+  }
+
+  .hud__item {
+    padding: $space-4;
+  }
+
+  .hud__metrics {
+    gap: $space-3;
+  }
+
+  .hud__track {
+    height: 12px;
+  }
 }
 
 .hud__timer {
