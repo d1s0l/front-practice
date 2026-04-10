@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { gameNpcs } from "@/shared/config/game-npcs";
 import { isInteractionKey } from "@/shared/lib/controls";
 import { usePlayerMovement } from "@/features/player-movement/model/usePlayerMovement";
@@ -9,6 +9,8 @@ import { useZoneInteraction } from "@/features/zone-interaction/model/useZoneInt
 import { DialogueModal } from "@/features/dialogue/ui/DialogueModal";
 import { BottomQuestionPanel } from "@/widgets/bottom-question-panel/ui/BottomQuestionPanel";
 import { GameHud } from "@/widgets/game-hud/ui/GameHud";
+import { InteractionButton } from "@/widgets/game-hub/ui/InteractionButton";
+import { MobileControls } from "@/widgets/game-hub/ui/MobileControls";
 import {
   FinalFeedbackOverlay,
   FinalSummaryOverlay,
@@ -25,7 +27,13 @@ const movementBounds = {
 };
 
 export function GameHub() {
-  const { position, facing, isMoving } = usePlayerMovement({
+  const {
+    position,
+    facing,
+    isMoving,
+    setDirectionPressed,
+    clearDirections,
+  } = usePlayerMovement({
     bounds: movementBounds,
     initialPosition: { x: 0, z: 3.2 },
     speed: 4.5,
@@ -57,10 +65,18 @@ export function GameHub() {
     finishFeedback,
   } = useGameSession(gameNpcs, activePromptNpc);
 
+  const handleInteract = useCallback(() => {
+    if (!canInteract || !activeNpc || openedNpc) {
+      return;
+    }
+
+    openNpc(activeNpc);
+  }, [activeNpc, canInteract, openNpc, openedNpc]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (canInteract && activeNpc && !openedNpc && isInteractionKey(event)) {
-        openNpc(activeNpc);
+        handleInteract();
       }
 
       if (event.key === "Escape") {
@@ -73,7 +89,20 @@ export function GameHub() {
     return () => {
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [activeNpc, canInteract, closeDialogue, openNpc, openedNpc]);
+  }, [activeNpc, canInteract, closeDialogue, handleInteract, openedNpc]);
+
+  useEffect(
+    () => () => {
+      clearDirections();
+    },
+    [clearDirections]
+  );
+
+  useEffect(() => {
+    if (openedNpc) {
+      clearDirections();
+    }
+  }, [clearDirections, openedNpc]);
 
   return (
     <main className={styles.hub}>
@@ -117,7 +146,39 @@ export function GameHub() {
             generatedDescription={promptContent?.description ?? null}
             isCompleted={activePromptNpc ? completedNpcSlugs.includes(activePromptNpc.slug) : false}
           />
+          <InteractionButton
+            visible={!openedNpc && canInteract}
+            disabled={!canInteract}
+            onInteract={handleInteract}
+          />
         </div>
+
+        {!openedNpc ? (
+          <div className={styles.hub__mobileControls}>
+            <div className={styles.hub__mobileControlsLeft}>
+              <MobileControls
+                onDirectionChange={setDirectionPressed}
+                onReleaseAll={clearDirections}
+              />
+            </div>
+
+            <div className={styles.hub__mobileControlsRight}>
+              <BottomQuestionPanel
+                npc={activePromptNpc}
+                generatedDescription={promptContent?.description ?? null}
+                isCompleted={
+                  activePromptNpc ? completedNpcSlugs.includes(activePromptNpc.slug) : false
+                }
+                compact
+              />
+              <InteractionButton
+                visible={canInteract}
+                disabled={!canInteract}
+                onInteract={handleInteract}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {openedNpc && currentStage ? (

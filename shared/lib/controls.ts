@@ -1,4 +1,6 @@
-const DIRECTION_KEY_BY_CODE: Record<string, "up" | "down" | "left" | "right" | undefined> = {
+export type MovementDirection = "up" | "down" | "left" | "right";
+
+const DIRECTION_KEY_BY_CODE: Record<string, MovementDirection | undefined> = {
   ArrowUp: "up",
   ArrowDown: "down",
   ArrowLeft: "left",
@@ -9,7 +11,7 @@ const DIRECTION_KEY_BY_CODE: Record<string, "up" | "down" | "left" | "right" | u
   KeyD: "right",
 };
 
-const DIRECTION_KEY_BY_KEY: Record<string, "up" | "down" | "left" | "right" | undefined> = {
+const DIRECTION_KEY_BY_KEY: Record<string, MovementDirection | undefined> = {
   w: "up",
   ц: "up",
   s: "down",

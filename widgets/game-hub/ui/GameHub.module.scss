@@ -3,6 +3,7 @@
 .hub {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   background: linear-gradient(180deg, $color-bg-top 0%, $color-bg-base 45%, $color-bg-bottom 100%);
 }
@@ -14,14 +15,19 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: $space-6;
+  padding:
+    max($space-6, env(safe-area-inset-top))
+    max($space-6, env(safe-area-inset-right))
+    max($space-6, env(safe-area-inset-bottom))
+    max($space-6, env(safe-area-inset-left));
   pointer-events: none;
 }
 
 .hub__top,
 .hub__legend,
 .hub__bottom,
-.hub__dialogLayer {
+.hub__dialogLayer,
+.hub__mobileControls {
   pointer-events: auto;
 }
 
@@ -63,8 +69,14 @@
 
 .hub__bottom {
   display: flex;
+  align-items: end;
   justify-content: center;
+  gap: $space-4;
   padding-bottom: $space-2;
+}
+
+.hub__mobileControls {
+  display: none;
 }
 
 .hub__dialogLayer {
@@ -81,7 +93,11 @@
 
 @media (max-width: $breakpoint-tablet) {
   .hub__overlay {
-    padding: $space-4;
+    padding:
+      max($space-4, env(safe-area-inset-top))
+      max($space-4, env(safe-area-inset-right))
+      max($space-4, env(safe-area-inset-bottom))
+      max($space-4, env(safe-area-inset-left));
   }
 
   .hub__legend {
@@ -94,15 +110,74 @@
 }
 
 @media (max-width: $breakpoint-mobile) {
+  .hub__overlay {
+    gap: $space-4;
+    padding:
+      max($space-4, calc(env(safe-area-inset-top) + 0.4rem))
+      max($space-4, calc(env(safe-area-inset-right) + 0.8rem))
+      max($space-4, calc(env(safe-area-inset-bottom) + 0.9rem))
+      max($space-4, calc(env(safe-area-inset-left) + 0.8rem));
+  }
+
   .hub__top {
-    flex-direction: column;
+    align-items: stretch;
   }
 
   .hub__back {
-    width: fit-content;
+    align-self: flex-end;
+    min-height: 42px;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.88rem;
   }
 
   .hub__legend {
     display: none;
+  }
+
+  .hub__bottom {
+    display: none;
+  }
+
+  .hub__mobileControls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: $space-3;
+    margin-top: auto;
+  }
+
+  .hub__mobileControlsLeft,
+  .hub__mobileControlsRight {
+    display: grid;
+    gap: $space-3;
+    align-items: end;
+  }
+
+  .hub__mobileControlsRight {
+    justify-items: end;
+  }
+
+  .hub__dialogLayer {
+    align-content: stretch;
+    padding:
+      max($space-4, calc(env(safe-area-inset-top) + 0.8rem))
+      max($space-4, calc(env(safe-area-inset-right) + 0.8rem))
+      max($space-4, calc(env(safe-area-inset-bottom) + 0.8rem))
+      max($space-4, calc(env(safe-area-inset-left) + 0.8rem));
+  }
+}
+
+@media (max-width: 390px) {
+  .hub__mobileControls {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+  }
+
+  .hub__mobileControlsRight {
+    justify-items: stretch;
+  }
+
+  .hub__back {
+    justify-self: end;
   }
 }

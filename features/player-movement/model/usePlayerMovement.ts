@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { clamp } from "@/shared/lib/clamp";
-import { getMovementDirectionFromKeyboard } from "@/shared/lib/controls";
+import {
+  getMovementDirectionFromKeyboard,
+  type MovementDirection,
+} from "@/shared/lib/controls";
 import type { PlayerFacing, PlayerPosition } from "@/entities/player/model/types";
 
 type MovementBounds = {
@@ -24,19 +27,38 @@ type MovementState = {
   isMoving: boolean;
 };
 
+type UsePlayerMovementResult = MovementState & {
+  setDirectionPressed: (direction: MovementDirection, pressed: boolean) => void;
+  clearDirections: () => void;
+};
+
 export function usePlayerMovement({
   bounds,
   initialPosition = { x: 0, z: 2.2 },
   speed = 4.2,
-}: UsePlayerMovementOptions): MovementState {
+}: UsePlayerMovementOptions): UsePlayerMovementResult {
   const [state, setState] = useState<MovementState>({
     position: initialPosition,
     facing: "down",
     isMoving: false,
   });
-  const pressedKeys = useRef(new Set<string>());
+  const pressedDirections = useRef(new Set<MovementDirection>());
   const frameRef = useRef<number | null>(null);
   const previousTimeRef = useRef<number | null>(null);
+  const setDirectionPressed = useCallback(
+    (direction: MovementDirection, pressed: boolean) => {
+      if (pressed) {
+        pressedDirections.current.add(direction);
+        return;
+      }
+
+      pressedDirections.current.delete(direction);
+    },
+    []
+  );
+  const clearDirections = useCallback(() => {
+    pressedDirections.current.clear();
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -46,7 +68,7 @@ export function usePlayerMovement({
         return;
       }
 
-      pressedKeys.current.add(mapped);
+      pressedDirections.current.add(mapped);
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
@@ -56,7 +78,7 @@ export function usePlayerMovement({
         return;
       }
 
-      pressedKeys.current.delete(mapped);
+      pressedDirections.current.delete(mapped);
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -75,11 +97,11 @@ export function usePlayerMovement({
       previousTimeRef.current = time;
 
       const directionX =
-        (pressedKeys.current.has("right") ? 1 : 0) -
-        (pressedKeys.current.has("left") ? 1 : 0);
+        (pressedDirections.current.has("right") ? 1 : 0) -
+        (pressedDirections.current.has("left") ? 1 : 0);
       const directionZ =
-        (pressedKeys.current.has("down") ? 1 : 0) -
-        (pressedKeys.current.has("up") ? 1 : 0);
+        (pressedDirections.current.has("down") ? 1 : 0) -
+        (pressedDirections.current.has("up") ? 1 : 0);
       const isMoving = directionX !== 0 || directionZ !== 0;
 
       setState((current) => {
@@ -122,8 +144,8 @@ export function usePlayerMovement({
 
         return {
           position: {
-            x: Number(nextX.toFixed(3)),
-            z: Number(nextZ.toFixed(3)),
+            x: nextX,
+            z: nextZ,
           },
           facing,
           isMoving: true,
@@ -142,5 +164,9 @@ export function usePlayerMovement({
     };
   }, [bounds.maxX, bounds.maxZ, bounds.minX, bounds.minZ, speed]);
 
-  return state;
+  return {
+    ...state,
+    setDirectionPressed,
+    clearDirections,
+  };
 }

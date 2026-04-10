@@ -31,7 +31,7 @@ export function GameHud({
     <aside className={styles.hud}>
       <div className={styles.hud__player}>
         <div className={styles.hud__avatar} aria-hidden="true" />
-        <div>
+        <div className={styles.hud__playerCopy}>
           <span className={styles.hud__label}>player status</span>
           <strong className={styles.hud__title}>Value Runner</strong>
           <span className={styles.hud__level}>{`Lv.${level} / XP ${xp}`}</span>
@@ -40,20 +40,42 @@ export function GameHud({
 
       <div className={styles.hud__stats}>
         <div className={styles.hud__item}>
-          <span>Квесты</span>
+          <span>
+            <span className={styles.hud__desktopLabel}>Квесты</span>
+            <span className={styles.hud__mobileLabel}>Кв</span>
+          </span>
           <strong>{`${completedQuests}/${totalQuests}`}</strong>
         </div>
         <div className={styles.hud__item}>
-          <span>Репутация</span>
+          <span>
+            <span className={styles.hud__desktopLabel}>Репутация</span>
+            <span className={styles.hud__mobileLabel}>Рейт</span>
+          </span>
           <strong>{reputation}</strong>
         </div>
       </div>
 
       <div className={styles.hud__metrics}>
-        <span>{`Ответственность ${responsibility}`}</span>
-        <span>{`Прозрачность ${transparency}`}</span>
-        <span>{`Скорость ${speed}`}</span>
-        <span>{`Качество ${quality}`}</span>
+        <span>
+          <span className={styles.hud__desktopLabel}>Ответственность</span>
+          <span className={styles.hud__mobileLabel}>Отв</span>
+          {` ${responsibility}`}
+        </span>
+        <span>
+          <span className={styles.hud__desktopLabel}>Прозрачность</span>
+          <span className={styles.hud__mobileLabel}>Прозр</span>
+          {` ${transparency}`}
+        </span>
+        <span>
+          <span className={styles.hud__desktopLabel}>Скорость</span>
+          <span className={styles.hud__mobileLabel}>Скор</span>
+          {` ${speed}`}
+        </span>
+        <span>
+          <span className={styles.hud__desktopLabel}>Качество</span>
+          <span className={styles.hud__mobileLabel}>Кач</span>
+          {` ${quality}`}
+        </span>
       </div>
 
       <div className={styles.hud__progress}>
@@ -68,7 +90,10 @@ export function GameHud({
 
       {timerRemaining !== null ? (
         <div className={styles.hud__timer}>
-          <span>Таймер</span>
+          <span>
+            <span className={styles.hud__desktopLabel}>Таймер</span>
+            <span className={styles.hud__mobileLabel}>Тмр</span>
+          </span>
           <strong>{`${timerRemaining}s`}</strong>
         </div>
       ) : null}

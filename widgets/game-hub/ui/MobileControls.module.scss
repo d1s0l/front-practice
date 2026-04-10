@@ -1,0 +1,66 @@
+@use "../../../shared/styles/variables" as *;
+
+.controls {
+  display: none;
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .controls {
+    display: grid;
+    gap: $space-3;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .controls__label {
+    color: rgba($color-text-primary, 0.72);
+    font-family: var(--font-display);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .controls__pad {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 4.15rem));
+    grid-template-areas:
+      ". up ."
+      "left . right"
+      ". down .";
+    gap: $space-2;
+  }
+
+  .controls__button {
+    @include pixel-frame(rgba($color-accent-soft, 0.22), rgba(10, 21, 38, 0.82));
+    display: grid;
+    place-items: center;
+    min-width: 4.15rem;
+    min-height: 4.15rem;
+    border-radius: 1.35rem;
+    color: $color-text-primary;
+    font-size: 1.25rem;
+    backdrop-filter: blur(18px);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .controls__button:active {
+    transform: scale(0.96);
+  }
+
+  .controls__buttonUp {
+    grid-area: up;
+  }
+
+  .controls__buttonLeft {
+    grid-area: left;
+  }
+
+  .controls__buttonRight {
+    grid-area: right;
+  }
+
+  .controls__buttonDown {
+    grid-area: down;
+  }
+}

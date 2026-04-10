@@ -3,6 +3,8 @@
 .modal {
   @include pixel-frame(rgba(255, 255, 255, 0.1), rgba(10, 21, 38, 0.92));
   width: min(760px, calc(100vw - 2rem));
+  max-height: min(88vh, 88dvh);
+  overflow: auto;
   border-radius: $radius-lg;
   padding: $space-5;
   backdrop-filter: blur(24px);
@@ -127,7 +129,10 @@
 
 @media (max-width: $breakpoint-mobile) {
   .modal {
+    width: min(100%, 100%);
+    max-height: min(100%, 100dvh);
     padding: $space-4;
+    border-radius: 24px;
   }
 
   .modal__header,
@@ -135,9 +140,38 @@
     flex-direction: column;
   }
 
+  .modal__name {
+    font-size: 1.45rem;
+  }
+
+  .modal__role,
+  .modal__message p,
+  .modal__response p {
+    font-size: 0.92rem;
+    line-height: 1.58;
+  }
+
+  .modal__message,
+  .modal__response {
+    margin-top: $space-4;
+    padding: $space-3;
+  }
+
+  .modal__choices {
+    gap: $space-2;
+    margin-top: $space-4;
+  }
+
+  .modal__choice {
+    padding: $space-3;
+    font-size: 0.94rem;
+    line-height: 1.45;
+  }
+
   .modal__close,
   .modal__secondary,
   .modal__primary {
     width: 100%;
+    min-height: 44px;
   }
 }

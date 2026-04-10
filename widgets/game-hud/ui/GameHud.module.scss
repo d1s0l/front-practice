@@ -10,6 +10,10 @@
   backdrop-filter: blur(18px);
 }
 
+.hud__playerCopy {
+  min-width: 0;
+}
+
 .hud__player,
 .hud__stats,
 .hud__progressMeta {
@@ -48,6 +52,10 @@
   margin-top: $space-2;
   color: $color-text-secondary;
   font-size: 0.8rem;
+}
+
+.hud__mobileLabel {
+  display: none;
 }
 
 .hud__stats {
@@ -124,4 +132,91 @@
 .hud__controls {
   display: grid;
   gap: $space-2;
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .hud {
+    gap: $space-3;
+    width: min(100%, 100%);
+    padding: $space-3;
+    border-radius: 22px;
+  }
+
+  .hud__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .hud__label {
+    margin-bottom: 0.1rem;
+    font-size: 0.42rem;
+  }
+
+  .hud__title {
+    font-size: 0.95rem;
+  }
+
+  .hud__level {
+    margin-top: 0.18rem;
+    font-size: 0.72rem;
+  }
+
+  .hud__stats {
+    gap: $space-2;
+  }
+
+  .hud__item {
+    padding: 0.7rem;
+  }
+
+  .hud__item span,
+  .hud__controls span,
+  .hud__progressMeta span,
+  .hud__metrics span,
+  .hud__timer span {
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+  }
+
+  .hud__metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .hud__track {
+    height: 8px;
+  }
+
+  .hud__controls {
+    display: none;
+  }
+
+  .hud__desktopLabel {
+    display: none;
+  }
+
+  .hud__mobileLabel {
+    display: inline;
+  }
+}
+
+@media (max-width: 390px) {
+  .hud {
+    gap: 0.7rem;
+    padding: 0.8rem;
+  }
+
+  .hud__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hud__item strong,
+  .hud__progressMeta strong,
+  .hud__timer strong {
+    font-size: 0.88rem;
+  }
+
+  .hud__level {
+    font-size: 0.68rem;
+  }
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
+import { MathUtils, Vector3 } from "three";
 import type { PlayerFacing, PlayerPosition } from "@/entities/player/model/types";
 import { PlayerActor } from "@/entities/player/ui/PlayerActor";
 import type { GameNpc } from "@/shared/config/game-npcs";
@@ -13,6 +15,81 @@ type PlayerSceneProps = {
   activeNpcSlug?: string;
   npcs: GameNpc[];
 };
+
+const cameraOffset = new Vector3(0, 9.4, 6.5);
+const lookAtHeight = new Vector3(0, 0.9, 0);
+const facingOffsetMap: Record<PlayerFacing, Vector3> = {
+  up: new Vector3(0, 0, -1),
+  down: new Vector3(0, 0, 1),
+  left: new Vector3(-0.8, 0, 0),
+  right: new Vector3(0.8, 0, 0),
+};
+
+function FollowCamera({
+  playerPosition,
+  playerFacing,
+}: Pick<PlayerSceneProps, "playerPosition" | "playerFacing">) {
+  const { camera } = useThree();
+  const initialisedRef = useRef(false);
+  const desiredCameraRef = useRef(new Vector3());
+  const desiredLookAtRef = useRef(new Vector3());
+  const smoothedLookAtRef = useRef(new Vector3());
+
+  useEffect(() => {
+    if (initialisedRef.current) {
+      return;
+    }
+
+    desiredCameraRef.current.set(
+      playerPosition.x + cameraOffset.x,
+      cameraOffset.y,
+      playerPosition.z + cameraOffset.z
+    );
+    desiredLookAtRef.current.set(
+      playerPosition.x + lookAtHeight.x,
+      lookAtHeight.y,
+      playerPosition.z + lookAtHeight.z
+    );
+    smoothedLookAtRef.current.copy(desiredLookAtRef.current);
+    camera.position.copy(desiredCameraRef.current);
+    camera.lookAt(smoothedLookAtRef.current);
+    initialisedRef.current = true;
+  }, [camera, playerPosition.x, playerPosition.z]);
+
+  useFrame((_, delta) => {
+    const facingOffset = facingOffsetMap[playerFacing];
+    const desiredX = MathUtils.clamp(playerPosition.x, -2.8, 2.8);
+    const desiredZ = MathUtils.clamp(playerPosition.z, -1.9, 2.4);
+
+    desiredCameraRef.current.set(
+      desiredX + cameraOffset.x,
+      cameraOffset.y,
+      desiredZ + cameraOffset.z
+    );
+    desiredLookAtRef.current.set(
+      playerPosition.x + facingOffset.x,
+      lookAtHeight.y,
+      playerPosition.z + facingOffset.z
+    );
+
+    if (!initialisedRef.current) {
+      camera.position.copy(desiredCameraRef.current);
+      smoothedLookAtRef.current.copy(desiredLookAtRef.current);
+      camera.lookAt(smoothedLookAtRef.current);
+      initialisedRef.current = true;
+      return;
+    }
+
+    const positionSmoothing = 1 - Math.exp(-delta * 6.2);
+    const lookAtSmoothing = 1 - Math.exp(-delta * 7.8);
+
+    camera.position.lerp(desiredCameraRef.current, positionSmoothing);
+    smoothedLookAtRef.current.lerp(desiredLookAtRef.current, lookAtSmoothing);
+    camera.lookAt(smoothedLookAtRef.current);
+  });
+
+  return null;
+}
 
 function NpcActor({ npc, isActive }: { npc: GameNpc; isActive: boolean }) {
   const colorMap = {
@@ -58,6 +135,7 @@ function GameMapWorld({
 }: PlayerSceneProps) {
   return (
     <>
+      <FollowCamera playerPosition={playerPosition} playerFacing={playerFacing} />
       <color attach="background" args={["#08111f"]} />
       <fog attach="fog" args={["#08111f", 10, 24]} />
       <ambientLight intensity={1.25} />
@@ -127,7 +205,7 @@ export function PlayerScene(props: PlayerSceneProps) {
     <div className={styles.scene}>
       <Canvas
         shadows
-        camera={{ position: [0, 10.8, 7.2], fov: 34 }}
+        camera={{ position: [0, 9.4, 6.5], fov: 38 }}
         className={styles.scene__canvas}
       >
         <GameMapWorld {...props} />
