@@ -52,6 +52,11 @@ type QuickDuelState = {
   totalBonusXp: number;
 };
 
+type PingPongSessionState = {
+  npc: GameNpc;
+  mode: "npc" | "freeplay";
+};
+
 type BonusXpNotice = {
   amount: number;
   label: string;
@@ -124,6 +129,9 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
   const [quickDuelDeadline, setQuickDuelDeadline] = useState<number | null>(null);
   const [quickDuelCompletedSlugs, setQuickDuelCompletedSlugs] = useState<string[]>([]);
   const [quickDuelBonusXp, setQuickDuelBonusXp] = useState(0);
+  const [pingPongNpcSlug, setPingPongNpcSlug] = useState<string | null>(null);
+  const [pingPongMode, setPingPongMode] = useState<"npc" | "freeplay">("npc");
+  const [pingPongCompletedSlugs, setPingPongCompletedSlugs] = useState<string[]>([]);
   const [bonusXpNotice, setBonusXpNotice] = useState<BonusXpNotice | null>(null);
   const timeoutTriggeredRef = useRef(false);
   const quickDuelTimeoutTriggeredRef = useRef(false);
@@ -135,6 +143,10 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
   const quickDuelNpc = useMemo(
     () => npcs.find((npc) => npc.slug === quickDuelNpcSlug) ?? null,
     [npcs, quickDuelNpcSlug]
+  );
+  const pingPongNpc = useMemo(
+    () => npcs.find((npc) => npc.slug === pingPongNpcSlug) ?? null,
+    [npcs, pingPongNpcSlug]
   );
 
   const currentStage = useMemo(() => {
@@ -208,6 +220,17 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
     quickDuelTimeRemaining,
   ]);
 
+  const pingPongState: PingPongSessionState | null = useMemo(() => {
+    if (!pingPongNpc) {
+      return null;
+    }
+
+    return {
+      npc: pingPongNpc,
+      mode: pingPongMode,
+    };
+  }, [pingPongMode, pingPongNpc]);
+
   const level = Math.floor(scores.xp / 60) + 1;
 
   const openDialogueForNpc = useCallback(
@@ -240,6 +263,11 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
     quickDuelTimeoutTriggeredRef.current = false;
   }, []);
 
+  const clearPingPong = useCallback(() => {
+    setPingPongNpcSlug(null);
+    setPingPongMode("npc");
+  }, []);
+
   const startQuickDuel = useCallback(
     (npc: GameNpc) => {
       const firstQuestion = npc.quickDuel?.questions[0];
@@ -263,8 +291,31 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
     [openDialogueForNpc]
   );
 
+  const startPingPong = useCallback((npc: GameNpc, mode: "npc" | "freeplay" = "npc") => {
+    setOpenedNpcSlug(null);
+    setStageOutcome(null);
+    setTimerDeadline(null);
+    setQuickDuelNpcSlug(null);
+    setQuickDuelOutcome(null);
+    setQuickDuelDeadline(null);
+    setPingPongNpcSlug(npc.slug);
+    setPingPongMode(mode);
+  }, []);
+
+  const startFreePingPong = useCallback(
+    (npc: GameNpc) => {
+      startPingPong(npc, "freeplay");
+    },
+    [startPingPong]
+  );
+
   const startInteraction = useCallback(
     (npc: GameNpc) => {
+      if (npc.pingPong && !pingPongCompletedSlugs.includes(npc.slug)) {
+        startPingPong(npc, "npc");
+        return;
+      }
+
       if (npc.quickDuel && !quickDuelCompletedSlugs.includes(npc.slug)) {
         startQuickDuel(npc);
         return;
@@ -272,7 +323,13 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
 
       openDialogueForNpc(npc);
     },
-    [openDialogueForNpc, quickDuelCompletedSlugs, startQuickDuel]
+    [
+      openDialogueForNpc,
+      pingPongCompletedSlugs,
+      quickDuelCompletedSlugs,
+      startPingPong,
+      startQuickDuel,
+    ]
   );
 
   const closeDialogue = useCallback(() => {
@@ -285,6 +342,10 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
   const closeQuickDuel = useCallback(() => {
     clearQuickDuel();
   }, [clearQuickDuel]);
+
+  const closePingPong = useCallback(() => {
+    clearPingPong();
+  }, [clearPingPong]);
 
   const clearBonusXpNotice = useCallback(() => {
     setBonusXpNotice(null);
@@ -300,6 +361,49 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
       label,
     });
   }, []);
+
+  const finishPingPong = useCallback(
+    (
+      npc: GameNpc,
+      result: {
+        playerScore: number;
+        opponentScore: number;
+        didWin: boolean;
+        isFlawless: boolean;
+      }
+    ) => {
+      if (pingPongMode === "freeplay") {
+        clearPingPong();
+        return;
+      }
+
+      const rewards = npc.pingPong?.rewards;
+
+      if (!rewards) {
+        clearPingPong();
+        return;
+      }
+
+      const awardedXp =
+        rewards.participation +
+        (result.didWin ? rewards.victory : 0) +
+        (result.isFlawless ? rewards.flawless : 0);
+
+      addBonusXp(
+        awardedXp,
+        result.didWin
+          ? result.isFlawless
+            ? "pong flawless"
+            : "pong victory"
+          : "pong challenge"
+      );
+      setPingPongCompletedSlugs((current) =>
+        current.includes(npc.slug) ? current : [...current, npc.slug]
+      );
+      clearPingPong();
+    },
+    [addBonusXp, clearPingPong, pingPongMode]
+  );
 
   const applyChoiceOutcome = useCallback(
     (
@@ -583,16 +687,21 @@ export function useGameSession(npcs: GameNpc[], previewNpc: GameNpc | null) {
     bonusXpNotice,
     quickDuelState,
     quickDuelCompletedSlugs,
+    pingPongState,
+    pingPongCompletedSlugs,
     setFeedback,
     openNpc,
     startInteraction,
     closeDialogue,
     closeQuickDuel,
+    closePingPong,
     clearBonusXpNotice,
     chooseDialogueOption,
     continueDialogue,
     answerQuickDuel,
     continueQuickDuel,
+    startFreePingPong,
+    finishPingPong,
     moveToFeedback: () => setFinalStep("feedback"),
     finishFeedback: () => setFinalStep("done"),
   };

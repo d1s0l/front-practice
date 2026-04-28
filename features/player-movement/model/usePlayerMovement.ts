@@ -19,6 +19,7 @@ type UsePlayerMovementOptions = {
   initialPosition?: PlayerPosition;
   speed?: number;
   bounds: MovementBounds;
+  isInputLocked?: boolean;
 };
 
 type MovementState = {
@@ -36,6 +37,7 @@ export function usePlayerMovement({
   bounds,
   initialPosition = { x: 0, z: 2.2 },
   speed = 4.2,
+  isInputLocked = false,
 }: UsePlayerMovementOptions): UsePlayerMovementResult {
   const [state, setState] = useState<MovementState>({
     position: initialPosition,
@@ -62,6 +64,10 @@ export function usePlayerMovement({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (isInputLocked) {
+        return;
+      }
+
       const mapped = getMovementDirectionFromKeyboard(event);
 
       if (!mapped) {
@@ -72,6 +78,10 @@ export function usePlayerMovement({
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
+      if (isInputLocked) {
+        return;
+      }
+
       const mapped = getMovementDirectionFromKeyboard(event);
 
       if (!mapped) {
@@ -88,7 +98,17 @@ export function usePlayerMovement({
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, []);
+  }, [isInputLocked]);
+
+  useEffect(() => {
+    if (!isInputLocked) {
+      return;
+    }
+
+    pressedDirections.current.clear();
+    previousTimeRef.current = null;
+    setState((current) => (current.isMoving ? { ...current, isMoving: false } : current));
+  }, [isInputLocked]);
 
   useEffect(() => {
     const tick = (time: number) => {

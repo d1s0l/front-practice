@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { gameNpcs } from "@/shared/config/game-npcs";
 import { isInteractionKey } from "@/shared/lib/controls";
-import { catCompanion, roomBounds } from "@/shared/config/world-objects";
+import { catCompanion, pingPongArcadeCorner, roomBounds } from "@/shared/config/world-objects";
 import { usePlayerMovement } from "@/features/player-movement/model/usePlayerMovement";
 import { useZoneInteraction } from "@/features/zone-interaction/model/useZoneInteraction";
 import { DialogueModal } from "@/features/dialogue/ui/DialogueModal";
 import { PingPongDialogue } from "@/features/dialogue/ui/PingPongDialogue";
+import { PingPongOverlay } from "@/features/ping-pong/ui/PingPongOverlay";
 import { BottomQuestionPanel } from "@/widgets/bottom-question-panel/ui/BottomQuestionPanel";
 import { BonusXpToast } from "@/widgets/game-hud/ui/BonusXpToast";
 import { GameHud } from "@/widgets/game-hud/ui/GameHud";
@@ -24,6 +25,7 @@ import styles from "./GameHub.module.scss";
 
 export function GameHub() {
   const [catPetPulse, setCatPetPulse] = useState(0);
+  const [isPingPongActive, setIsPingPongActive] = useState(false);
   const {
     position,
     facing,
@@ -34,6 +36,7 @@ export function GameHub() {
     bounds: roomBounds,
     initialPosition: { x: 0, z: 3.2 },
     speed: 4.5,
+    isInputLocked: isPingPongActive,
   });
   const { activeZone: activeNpc, canInteract } = useZoneInteraction(
     position,
@@ -56,16 +59,25 @@ export function GameHub() {
     bonusXpNotice,
     quickDuelState,
     quickDuelCompletedSlugs,
+    pingPongState,
+    pingPongCompletedSlugs,
     setFeedback,
     startInteraction,
+    startFreePingPong,
     closeDialogue,
     closeQuickDuel,
+    closePingPong,
     chooseDialogueOption,
     continueDialogue,
     answerQuickDuel,
+    finishPingPong,
     moveToFeedback,
     finishFeedback,
   } = useGameSession(gameNpcs, activePromptNpc);
+
+  useEffect(() => {
+    setIsPingPongActive(Boolean(pingPongState));
+  }, [pingPongState]);
 
   const catDistance = useMemo(
     () =>
@@ -73,8 +85,25 @@ export function GameHub() {
     [position.x, position.z]
   );
   const canPetCat = catDistance <= catCompanion.activationRadius;
-  const isAnyOverlayOpen = Boolean(openedNpc || quickDuelState || finalStep);
-  const shouldShowCatPrompt = canPetCat && !activePromptNpc && !isAnyOverlayOpen;
+  const speedNpc = useMemo(
+    () => gameNpcs.find((npc) => npc.slug === "speed") ?? null,
+    []
+  );
+  const pingPongTableDistance = useMemo(
+    () =>
+      Math.hypot(
+        position.x - pingPongArcadeCorner.position.x,
+        position.z - pingPongArcadeCorner.position.z
+      ),
+    [position.x, position.z]
+  );
+  const canInteractWithPingPongTable =
+    pingPongTableDistance <= pingPongArcadeCorner.activationRadius;
+  const isAnyOverlayOpen = Boolean(openedNpc || quickDuelState || pingPongState || finalStep);
+  const shouldShowTablePrompt =
+    canInteractWithPingPongTable && !activePromptNpc && !isAnyOverlayOpen && Boolean(speedNpc);
+  const shouldShowCatPrompt =
+    canPetCat && !activePromptNpc && !shouldShowTablePrompt && !isAnyOverlayOpen;
 
   const promptOverride = useMemo(() => {
     if (shouldShowCatPrompt) {
@@ -84,6 +113,30 @@ export function GameHub() {
         role: `${catCompanion.role} · ${catCompanion.valueLabel}`,
         text: catCompanion.description,
         status: catCompanion.promptText,
+      };
+    }
+
+    if (
+      !openedNpc &&
+      activePromptNpc?.pingPong &&
+      !pingPongCompletedSlugs.includes(activePromptNpc.slug)
+    ) {
+      return {
+        eyebrow: activePromptNpc.sectorCode,
+        title: `${activePromptNpc.name} · pong arena`,
+        role: `${activePromptNpc.role} · arcade challenge`,
+        text: activePromptNpc.pingPong.intro,
+        status: "Нажмите E / У, чтобы сыграть в пинг-понг",
+      };
+    }
+
+    if (shouldShowTablePrompt) {
+      return {
+        eyebrow: "arcade_01",
+        title: "Pong table",
+        role: "arcade zone · free play",
+        text: "Здесь можно сыграть быстрый матч в пинг-понг просто так, без влияния на квест Сони.",
+        status: "Нажмите E / У, чтобы начать свободную игру",
       };
     }
 
@@ -102,13 +155,37 @@ export function GameHub() {
     }
 
     return null;
-  }, [activePromptNpc, openedNpc, quickDuelCompletedSlugs, shouldShowCatPrompt]);
+  }, [
+    activePromptNpc,
+    openedNpc,
+    pingPongCompletedSlugs,
+    quickDuelCompletedSlugs,
+    shouldShowTablePrompt,
+    shouldShowCatPrompt,
+  ]);
 
   const interactionButtonCopy = useMemo(() => {
     if (shouldShowCatPrompt) {
       return {
         title: "Погладить",
         hint: catCompanion.interactionHint,
+      };
+    }
+
+    if (shouldShowTablePrompt) {
+      return {
+        title: "Играть",
+        hint: "Запустить свободный матч в пинг-понг",
+      };
+    }
+
+    if (
+      activePromptNpc?.pingPong &&
+      !pingPongCompletedSlugs.includes(activePromptNpc.slug)
+    ) {
+      return {
+        title: "Пинг-понг",
+        hint: "Запустить arcade матч до 3 очков",
       };
     }
 
@@ -126,10 +203,40 @@ export function GameHub() {
       title: "Диалог",
       hint: "Открыть разговор с NPC",
     };
-  }, [activePromptNpc, quickDuelCompletedSlugs, shouldShowCatPrompt]);
+  }, [
+    activePromptNpc,
+    pingPongCompletedSlugs,
+    quickDuelCompletedSlugs,
+    shouldShowCatPrompt,
+    shouldShowTablePrompt,
+  ]);
+
+  const handleClosePingPong = useCallback(() => {
+    setIsPingPongActive(false);
+    closePingPong();
+  }, [closePingPong]);
+
+  const handleFinishPingPong = useCallback(
+    (result: {
+      playerScore: number;
+      opponentScore: number;
+      didWin: boolean;
+      isFlawless: boolean;
+      durationMs: number;
+    }) => {
+      setIsPingPongActive(false);
+
+      if (!pingPongState) {
+        return;
+      }
+
+      finishPingPong(pingPongState.npc, result);
+    },
+    [finishPingPong, pingPongState]
+  );
 
   const handleInteract = useCallback(() => {
-    if (openedNpc || quickDuelState || finalStep) {
+    if (openedNpc || quickDuelState || pingPongState || finalStep) {
       return;
     }
 
@@ -138,18 +245,36 @@ export function GameHub() {
       return;
     }
 
+    if (shouldShowTablePrompt && speedNpc) {
+      setIsPingPongActive(true);
+      clearDirections();
+      startFreePingPong(speedNpc);
+      return;
+    }
+
     if (!canInteract || !activeNpc) {
       return;
+    }
+
+    if (activeNpc.pingPong && !pingPongCompletedSlugs.includes(activeNpc.slug)) {
+      setIsPingPongActive(true);
+      clearDirections();
     }
 
     startInteraction(activeNpc);
   }, [
     activeNpc,
     canInteract,
+    clearDirections,
     finalStep,
     openedNpc,
+    pingPongCompletedSlugs,
+    pingPongState,
     quickDuelState,
+    shouldShowTablePrompt,
     shouldShowCatPrompt,
+    speedNpc,
+    startFreePingPong,
     startInteraction,
   ]);
 
@@ -158,8 +283,9 @@ export function GameHub() {
       if (
         !openedNpc &&
         !quickDuelState &&
+        !pingPongState &&
         !finalStep &&
-        (shouldShowCatPrompt || (canInteract && activeNpc)) &&
+        (shouldShowCatPrompt || shouldShowTablePrompt || (canInteract && activeNpc)) &&
         isInteractionKey(event)
       ) {
         handleInteract();
@@ -168,6 +294,11 @@ export function GameHub() {
       if (event.key === "Escape") {
         if (quickDuelState) {
           closeQuickDuel();
+          return;
+        }
+
+        if (pingPongState) {
+          handleClosePingPong();
           return;
         }
 
@@ -187,8 +318,11 @@ export function GameHub() {
     closeQuickDuel,
     finalStep,
     handleInteract,
+    handleClosePingPong,
     openedNpc,
+    pingPongState,
     quickDuelState,
+    shouldShowTablePrompt,
     shouldShowCatPrompt,
   ]);
 
@@ -200,10 +334,10 @@ export function GameHub() {
   );
 
   useEffect(() => {
-    if (openedNpc || quickDuelState) {
+    if (openedNpc || quickDuelState || pingPongState) {
       clearDirections();
     }
-  }, [clearDirections, openedNpc, quickDuelState]);
+  }, [clearDirections, openedNpc, pingPongState, quickDuelState]);
 
   return (
     <main className={styles.hub}>
@@ -215,6 +349,7 @@ export function GameHub() {
         npcs={gameNpcs}
         catIsNearby={shouldShowCatPrompt}
         catPetPulse={catPetPulse}
+        hidePosters={Boolean(pingPongState)}
       />
 
       <div className={styles.hub__overlay}>
@@ -251,15 +386,20 @@ export function GameHub() {
             promptOverride={!openedNpc ? promptOverride : null}
           />
           <InteractionButton
-            visible={!openedNpc && !quickDuelState && (canInteract || shouldShowCatPrompt)}
-            disabled={!canInteract && !shouldShowCatPrompt}
+            visible={
+              !openedNpc &&
+              !quickDuelState &&
+              !pingPongState &&
+              (canInteract || shouldShowCatPrompt || shouldShowTablePrompt)
+            }
+            disabled={!canInteract && !shouldShowCatPrompt && !shouldShowTablePrompt}
             onInteract={handleInteract}
             title={interactionButtonCopy.title}
             hint={interactionButtonCopy.hint}
           />
         </div>
 
-        {!openedNpc && !quickDuelState ? (
+        {!openedNpc && !quickDuelState && !pingPongState ? (
           <div className={styles.hub__mobileControls}>
             <div className={styles.hub__mobileControlsLeft}>
               <MobileControls
@@ -279,8 +419,8 @@ export function GameHub() {
                 promptOverride={promptOverride}
               />
               <InteractionButton
-                visible={canInteract || shouldShowCatPrompt}
-                disabled={!canInteract && !shouldShowCatPrompt}
+                visible={canInteract || shouldShowCatPrompt || shouldShowTablePrompt}
+                disabled={!canInteract && !shouldShowCatPrompt && !shouldShowTablePrompt}
                 onInteract={handleInteract}
                 title={interactionButtonCopy.title}
                 hint={interactionButtonCopy.hint}
@@ -331,6 +471,14 @@ export function GameHub() {
             onClose={closeQuickDuel}
           />
         </div>
+      ) : null}
+
+      {pingPongState ? (
+        <PingPongOverlay
+          npc={pingPongState.npc}
+          onClose={handleClosePingPong}
+          onFinish={handleFinishPingPong}
+        />
       ) : null}
 
       {finalStep === "summary" ? (

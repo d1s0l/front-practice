@@ -135,4 +135,28 @@ describe("useGameSession", () => {
     expect(result.current.bonusXpNotice?.amount).toBe(23);
     expect(result.current.scores.xp).toBe(23);
   });
+
+  it("starts the pong challenge for the configured npc and awards bonus xp on victory", () => {
+    const { result } = renderHook(() => useGameSession(gameNpcs, null));
+
+    act(() => {
+      result.current.startInteraction(gameNpcs[2]);
+    });
+
+    expect(result.current.pingPongState?.npc.slug).toBe("speed");
+
+    act(() => {
+      result.current.finishPingPong(gameNpcs[2], {
+        playerScore: 3,
+        opponentScore: 1,
+        didWin: true,
+        isFlawless: false,
+      });
+    });
+
+    expect(result.current.pingPongState).toBeNull();
+    expect(result.current.pingPongCompletedSlugs).toContain("speed");
+    expect(result.current.bonusXpNotice?.amount).toBe(32);
+    expect(result.current.scores.xp).toBe(32);
+  });
 });

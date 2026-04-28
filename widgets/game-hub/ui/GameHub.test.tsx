@@ -39,16 +39,20 @@ const baseSessionState = {
   startInteraction: startInteractionMock,
   closeDialogue: closeDialogueMock,
   closeQuickDuel: vi.fn(),
+  closePingPong: vi.fn(),
   clearBonusXpNotice: vi.fn(),
   chooseDialogueOption: chooseDialogueOptionMock,
   continueDialogue: continueDialogueMock,
   answerQuickDuel: vi.fn(),
   continueQuickDuel: vi.fn(),
+  finishPingPong: vi.fn(),
   moveToFeedback: moveToFeedbackMock,
   finishFeedback: finishFeedbackMock,
   bonusXpNotice: null,
   quickDuelState: null,
   quickDuelCompletedSlugs: [] as string[],
+  pingPongState: null,
+  pingPongCompletedSlugs: [] as string[],
 };
 
 let sessionState = { ...baseSessionState };
@@ -82,6 +86,10 @@ vi.mock("@/widgets/player-scene/ui/PlayerScene", () => ({
 
 vi.mock("@/widgets/game-hub/ui/MobileControls", () => ({
   MobileControls: () => <div data-testid="mobile-controls" />,
+}));
+
+vi.mock("@/features/ping-pong/ui/PingPongOverlay", () => ({
+  PingPongOverlay: () => <div data-testid="ping-pong-overlay" />,
 }));
 
 vi.mock("@/features/player-movement/model/usePlayerMovement", () => ({
@@ -185,5 +193,17 @@ describe("GameHub", () => {
     expect(screen.getAllByText(catCompanion.name)).toHaveLength(2);
     expect(screen.getAllByText(/погладить кота/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /погладить/i })).toBeInTheDocument();
+  });
+
+  it("shows the pong challenge prompt for the configured npc", () => {
+    zoneState = {
+      activeZone: gameNpcs[2],
+      canInteract: true,
+    };
+
+    render(<GameHub />);
+
+    expect(screen.getAllByText(/pong arena/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /пинг-понг/i })).toBeInTheDocument();
   });
 });

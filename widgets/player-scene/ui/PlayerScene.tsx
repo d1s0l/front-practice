@@ -17,7 +17,7 @@ import type { PlayerFacing, PlayerPosition } from "@/entities/player/model/types
 import { PlayerActor } from "@/entities/player/ui/PlayerActor";
 import type { GameNpc } from "@/shared/config/game-npcs";
 import { clamp } from "@/shared/lib/clamp";
-import { catCompanion, techPosters } from "@/shared/config/world-objects";
+import { catCompanion, pingPongArcadeCorner, techPosters } from "@/shared/config/world-objects";
 import styles from "./PlayerScene.module.scss";
 
 type PlayerSceneProps = {
@@ -28,6 +28,7 @@ type PlayerSceneProps = {
   npcs: GameNpc[];
   catIsNearby: boolean;
   catPetPulse: number;
+  hidePosters?: boolean;
 };
 
 type Vec3Tuple = [number, number, number];
@@ -465,6 +466,41 @@ function MapPlatforms() {
   );
 }
 
+function PingPongCorner() {
+  return (
+    <group position={[pingPongArcadeCorner.position.x, 0, pingPongArcadeCorner.position.z]}>
+      <RoundedBox
+        args={pingPongArcadeCorner.tableScale}
+        radius={0.08}
+        smoothness={4}
+        position={[0, pingPongArcadeCorner.tableHeight, 0]}
+        castShadow
+        receiveShadow
+      >
+        <meshStandardMaterial color="#1f4d69" />
+      </RoundedBox>
+      <mesh position={[0, pingPongArcadeCorner.tableHeight + 0.12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[0.06, 1.22]} />
+        <meshStandardMaterial color="#f4f7fb" emissive="#9ce3ff" emissiveIntensity={0.16} />
+      </mesh>
+      {pingPongArcadeCorner.sidePodiums.map((podium, index) => (
+        <group key={`${podium.x}-${podium.z}`} position={[podium.x - pingPongArcadeCorner.position.x, 0, podium.z - pingPongArcadeCorner.position.z]}>
+          <RoundedBox args={[0.42, 0.26, 0.26]} radius={0.05} smoothness={4} position={[0, 0.26, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={index === 0 ? "#79d7ff" : "#f6c94d"} />
+          </RoundedBox>
+          <RoundedBox args={[0.18, 0.04, 0.28]} radius={0.02} smoothness={4} position={[0.04, 0.44, 0]} castShadow>
+            <meshStandardMaterial color={index === 0 ? "#0e2038" : "#31220b"} />
+          </RoundedBox>
+        </group>
+      ))}
+      <mesh position={[0, pingPongArcadeCorner.tableHeight + 0.22, 0.18]}>
+        <sphereGeometry args={[0.07, 16, 16]} />
+        <meshStandardMaterial color="#f4f7fb" emissive="#f4f7fb" emissiveIntensity={0.18} />
+      </mesh>
+    </group>
+  );
+}
+
 function GameMapWorld({
   playerPosition,
   playerFacing,
@@ -473,6 +509,7 @@ function GameMapWorld({
   npcs,
   catIsNearby,
   catPetPulse,
+  hidePosters = false,
 }: PlayerSceneProps) {
   return (
     <>
@@ -480,10 +517,10 @@ function GameMapWorld({
       <SceneShell />
       <MapGround />
       <MapWalls />
-      <MapPlatforms />
-      {techPosters.map((poster) => (
-        <TechPoster key={poster.id} {...poster} />
-      ))}
+      <PingPongCorner />
+      {!hidePosters
+        ? techPosters.map((poster) => <TechPoster key={poster.id} {...poster} />)
+        : null}
 
       {npcs.map((npc) => (
         <NpcActor key={npc.slug} npc={npc} isActive={npc.slug === activeNpcSlug} />

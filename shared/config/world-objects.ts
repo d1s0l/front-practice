@@ -58,3 +58,17 @@ export const techPosters = [
     accent: "#9ce3ff",
   },
 ] as const;
+
+export const pingPongArcadeCorner = {
+  position: {
+    x: -7.55,
+    z: -5.1,
+  },
+  tableScale: [2.4, 0.2, 1.35] as [number, number, number],
+  tableHeight: 0.72,
+  activationRadius: 1.8,
+  sidePodiums: [
+    { x: -8.6, z: -5.1 },
+    { x: -6.48, z: -5.1 },
+  ],
+} as const;

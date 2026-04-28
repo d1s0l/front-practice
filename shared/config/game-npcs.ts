@@ -56,6 +56,17 @@ export type QuickDuelConfig = {
   questions: QuickDuelQuestion[];
 };
 
+export type PingPongConfig = {
+  intro: string;
+  summary: string;
+  winningScore: number;
+  rewards: {
+    participation: number;
+    victory: number;
+    flawless: number;
+  };
+};
+
 export type GameNpc = {
   slug: "responsibility" | "transparency" | "speed";
   name: string;
@@ -75,6 +86,7 @@ export type GameNpc = {
   };
   stages: NpcStage[];
   quickDuel?: QuickDuelConfig;
+  pingPong?: PingPongConfig;
 };
 
 export const gameNpcs: GameNpc[] = [
@@ -449,6 +461,18 @@ export const gameNpcs: GameNpc[] = [
     aiProfile: {
       personality: "быстрый прагматик",
       domain: "скорость, качество и pressure-сценарии",
+    },
+    pingPong: {
+      intro:
+        "Соня переключает тебя в arcade-режим: короткий матч в пинг-понг на скорость решений и контроль темпа.",
+      summary:
+        "Матч завершён. Темп, контроль и точность дали тебе дополнительный XP до основной ветки скорости.",
+      winningScore: 3,
+      rewards: {
+        participation: 10,
+        victory: 22,
+        flawless: 12,
+      },
     },
     stages: [
       {

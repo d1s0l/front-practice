@@ -84,6 +84,8 @@ describe("PlayerScene", () => {
         isMoving
         activeNpcSlug="responsibility"
         npcs={gameNpcs}
+        catIsNearby={false}
+        catPetPulse={0}
       />
     );
 
@@ -104,6 +106,8 @@ describe("PlayerScene", () => {
         isMoving={false}
         activeNpcSlug="speed"
         npcs={gameNpcs}
+        catIsNearby={false}
+        catPetPulse={0}
       />
     );
 
