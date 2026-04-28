@@ -17,6 +17,21 @@ type PingPongOverlayProps = {
   }) => void;
 };
 
+function DirectionIcon({ direction }: { direction: "up" | "down" }) {
+  return (
+    <svg
+      className={`${styles.overlay__padIcon} ${
+        direction === "down" ? styles["overlay__padIcon--down"] : ""
+      }`}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M12 5 20 19H4Z" />
+    </svg>
+  );
+}
+
 export function PingPongOverlay({ npc, onClose, onFinish }: PingPongOverlayProps) {
   const winningScore = npc.pingPong?.winningScore ?? 3;
   const { matchState, playerScore, opponentScore, playerY, opponentY, ball, countdown, statusText, winner, startGame, setMoveDirection } =
@@ -118,7 +133,7 @@ export function PingPongOverlay({ npc, onClose, onFinish }: PingPongOverlayProps
                 onPointerCancel={() => setMoveDirection(0)}
                 onPointerLeave={() => setMoveDirection(0)}
               >
-                UP
+                <DirectionIcon direction="up" />
               </button>
               <button
                 type="button"
@@ -128,7 +143,7 @@ export function PingPongOverlay({ npc, onClose, onFinish }: PingPongOverlayProps
                 onPointerCancel={() => setMoveDirection(0)}
                 onPointerLeave={() => setMoveDirection(0)}
               >
-                DOWN
+                <DirectionIcon direction="down" />
               </button>
             </div>
           )}

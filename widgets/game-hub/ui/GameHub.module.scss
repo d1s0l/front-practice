@@ -34,7 +34,8 @@
 .hub__legend,
 .hub__bottom,
 .hub__dialogLayer,
-.hub__mobileControls {
+.hub__mobileControls,
+.hub__mobilePrompt {
   pointer-events: auto;
 }
 
@@ -45,6 +46,15 @@
   gap: $space-4;
   width: min(100%, 96rem);
   align-self: center;
+}
+
+.hub__desktopHud {
+  min-width: 0;
+}
+
+.hub__mobileHud,
+.hub__mobilePrompt {
+  display: none;
 }
 
 .hub__back {
@@ -254,6 +264,47 @@
     justify-items: end;
   }
 
+  .hub__desktopHud {
+    display: none;
+  }
+
+  .hub__mobileHud {
+    position: relative;
+    display: grid;
+    gap: $space-2;
+    width: min(100%, 11.5rem);
+  }
+
+  .hub__mobileHudToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid rgba($color-accent-soft, 0.26);
+    border-radius: $radius-md;
+    background: rgba(10, 21, 38, 0.82);
+    backdrop-filter: blur(16px);
+    color: $color-text-primary;
+    font-size: 0.84rem;
+    white-space: nowrap;
+  }
+
+  .hub__mobileHudPanel {
+    position: absolute;
+    top: calc(100% + #{$space-2});
+    left: 0;
+    width: min(calc(100vw - 2rem), 24rem);
+    z-index: 3;
+  }
+
+  .hub__mobilePrompt {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 0.25rem;
+  }
+
   .hub__dialogLayer {
     place-items: stretch;
     padding:
@@ -276,5 +327,13 @@
 
   .hub__back {
     justify-self: end;
+  }
+
+  .hub__mobileHud {
+    width: 100%;
+  }
+
+  .hub__mobileHudPanel {
+    width: min(calc(100vw - 1.6rem), 24rem);
   }
 }

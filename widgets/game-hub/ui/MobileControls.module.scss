@@ -44,6 +44,29 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  .controls__icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: $color-text-primary;
+    filter: drop-shadow(0 0 10px rgba($color-text-primary, 0.16));
+  }
+
+  .controls__icon--up {
+    transform: rotate(0deg);
+  }
+
+  .controls__icon--right {
+    transform: rotate(90deg);
+  }
+
+  .controls__icon--down {
+    transform: rotate(180deg);
+  }
+
+  .controls__icon--left {
+    transform: rotate(-90deg);
+  }
+
   .controls__button:active {
     transform: scale(0.96);
   }

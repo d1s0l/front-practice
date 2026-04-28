@@ -232,6 +232,10 @@
     display: none;
   }
 
+  .hud__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .hud__desktopLabel {
     display: none;
   }

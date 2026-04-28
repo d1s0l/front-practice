@@ -26,6 +26,7 @@ import styles from "./GameHub.module.scss";
 export function GameHub() {
   const [catPetPulse, setCatPetPulse] = useState(0);
   const [isPingPongActive, setIsPingPongActive] = useState(false);
+  const [isMobileHudOpen, setIsMobileHudOpen] = useState(false);
   const {
     position,
     facing,
@@ -104,6 +105,18 @@ export function GameHub() {
     canInteractWithPingPongTable && !activePromptNpc && !isAnyOverlayOpen && Boolean(speedNpc);
   const shouldShowCatPrompt =
     canPetCat && !activePromptNpc && !shouldShowTablePrompt && !isAnyOverlayOpen;
+  const isMobileInteractionVisible = Boolean(
+    !openedNpc &&
+      !quickDuelState &&
+      !pingPongState &&
+      (canInteract || shouldShowCatPrompt || shouldShowTablePrompt)
+  );
+
+  useEffect(() => {
+    if (openedNpc || quickDuelState || pingPongState || finalStep) {
+      setIsMobileHudOpen(false);
+    }
+  }, [finalStep, openedNpc, pingPongState, quickDuelState]);
 
   const promptOverride = useMemo(() => {
     if (shouldShowCatPrompt) {
@@ -354,23 +367,68 @@ export function GameHub() {
 
       <div className={styles.hub__overlay}>
         <div className={styles.hub__top}>
-          <GameHud
-            reputation={scores.reputation}
-            responsibility={scores.responsibility}
-            transparency={scores.transparency}
-            speed={scores.speed}
-            quality={scores.quality}
-            xp={scores.xp}
-            level={level}
-            completedQuests={completedNpcSlugs.length}
-            totalQuests={gameNpcs.length}
-            timerRemaining={timerRemaining}
-          />
+          <div className={styles.hub__desktopHud}>
+            <GameHud
+              reputation={scores.reputation}
+              responsibility={scores.responsibility}
+              transparency={scores.transparency}
+              speed={scores.speed}
+              quality={scores.quality}
+              xp={scores.xp}
+              level={level}
+              completedQuests={completedNpcSlugs.length}
+              totalQuests={gameNpcs.length}
+              timerRemaining={timerRemaining}
+            />
+          </div>
+
+          <div className={styles.hub__mobileHud}>
+            <button
+              type="button"
+              className={styles.hub__mobileHudToggle}
+              onClick={() => setIsMobileHudOpen((current) => !current)}
+              aria-expanded={isMobileHudOpen}
+              aria-controls="mobile-game-hud"
+            >
+              {isMobileHudOpen ? "Скрыть рейтинг" : "Рейтинг и XP"}
+            </button>
+
+            {isMobileHudOpen ? (
+              <div className={styles.hub__mobileHudPanel} id="mobile-game-hud">
+                <GameHud
+                  reputation={scores.reputation}
+                  responsibility={scores.responsibility}
+                  transparency={scores.transparency}
+                  speed={scores.speed}
+                  quality={scores.quality}
+                  xp={scores.xp}
+                  level={level}
+                  completedQuests={completedNpcSlugs.length}
+                  totalQuests={gameNpcs.length}
+                  timerRemaining={timerRemaining}
+                />
+              </div>
+            ) : null}
+          </div>
 
           <Link className={styles.hub__back} href="/">
             В меню
           </Link>
         </div>
+
+        {isMobileInteractionVisible ? (
+          <div className={styles.hub__mobilePrompt}>
+            <BottomQuestionPanel
+              npc={!shouldShowCatPrompt ? activePromptNpc : null}
+              generatedDescription={promptContent?.description ?? null}
+              isCompleted={
+                activePromptNpc ? completedNpcSlugs.includes(activePromptNpc.slug) : false
+              }
+              compact
+              promptOverride={promptOverride}
+            />
+          </div>
+        ) : null}
 
         <div className={styles.hub__legend}>
           <span>Подойди к NPC</span>
@@ -409,17 +467,8 @@ export function GameHub() {
             </div>
 
             <div className={styles.hub__mobileControlsRight}>
-              <BottomQuestionPanel
-                npc={!shouldShowCatPrompt ? activePromptNpc : null}
-                generatedDescription={promptContent?.description ?? null}
-                isCompleted={
-                  activePromptNpc ? completedNpcSlugs.includes(activePromptNpc.slug) : false
-                }
-                compact
-                promptOverride={promptOverride}
-              />
               <InteractionButton
-                visible={canInteract || shouldShowCatPrompt || shouldShowTablePrompt}
+                visible={isMobileInteractionVisible}
                 disabled={!canInteract && !shouldShowCatPrompt && !shouldShowTablePrompt}
                 onInteract={handleInteract}
                 title={interactionButtonCopy.title}

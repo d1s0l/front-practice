@@ -205,6 +205,20 @@
 .overlay__padButton {
   min-width: 6.4rem;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.overlay__padIcon {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: currentColor;
+  filter: drop-shadow(0 0 10px rgba($color-text-primary, 0.16));
+}
+
+.overlay__padIcon--down {
+  transform: rotate(180deg);
 }
 
 @media (max-width: $breakpoint-mobile) {
