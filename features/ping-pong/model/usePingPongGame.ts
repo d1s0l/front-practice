@@ -71,6 +71,24 @@ function isBallOverlappingPaddle(
   return ballY + ballRadius >= paddleTop && ballY - ballRadius <= paddleBottom;
 }
 
+function getBallContactY(
+  previousXEdge: number,
+  nextXEdge: number,
+  contactX: number,
+  previousY: number,
+  nextY: number
+) {
+  const distanceX = nextXEdge - previousXEdge;
+
+  if (distanceX === 0) {
+    return nextY;
+  }
+
+  const progress = clamp((contactX - previousXEdge) / distanceX, 0, 1);
+
+  return previousY + (nextY - previousY) * progress;
+}
+
 export function usePingPongGame({ winningScore, onFinish }: UsePingPongGameOptions) {
   const [matchState, setMatchState] = useState<MatchState>("ready");
   const [playerScore, setPlayerScore] = useState(0);
@@ -191,6 +209,28 @@ export function usePingPongGame({ winningScore, onFinish }: UsePingPongGameOptio
       const previousBallRight = ball.x + BALL_SIZE / 2;
       const nextBallLeft = nextBall.x - BALL_SIZE / 2;
       const nextBallRight = nextBall.x + BALL_SIZE / 2;
+      const playerContactX = PLAYER_X + 1.5;
+      const opponentContactX = OPPONENT_X - 1.5;
+      const playerContactY = getBallContactY(
+        previousBallLeft,
+        nextBallLeft,
+        playerContactX,
+        ball.y,
+        nextBall.y
+      );
+      const opponentContactY = getBallContactY(
+        previousBallRight,
+        nextBallRight,
+        opponentContactX,
+        ball.y,
+        nextBall.y
+      );
+      const playerYAtContact = playerY + (nextPlayerY - playerY) * 0.5;
+      const opponentYAtContact = opponentY + (nextOpponentY - opponentY) * 0.5;
+      const playerReachTopAtContact = playerYAtContact - PADDLE_HEIGHT / 2;
+      const playerReachBottomAtContact = playerYAtContact + PADDLE_HEIGHT / 2;
+      const opponentReachTopAtContact = opponentYAtContact - PADDLE_HEIGHT / 2;
+      const opponentReachBottomAtContact = opponentYAtContact + PADDLE_HEIGHT / 2;
 
       if (nextBall.y <= BALL_SIZE / 2 || nextBall.y >= FIELD_HEIGHT - BALL_SIZE / 2) {
         nextBall = {
@@ -207,12 +247,16 @@ export function usePingPongGame({ winningScore, onFinish }: UsePingPongGameOptio
 
       const hitPlayer =
         nextBall.vx < 0 &&
-        previousBallLeft >= PLAYER_X + 1.5 &&
-        nextBallLeft <= PLAYER_X + 1.5 &&
-        isBallOverlappingPaddle(nextBall.y, playerReachTop, playerReachBottom);
+        nextBallLeft <= playerContactX &&
+        previousBallRight >= playerContactX - BALL_SIZE &&
+        isBallOverlappingPaddle(
+          playerContactY,
+          playerReachTopAtContact,
+          playerReachBottomAtContact
+        );
 
       if (hitPlayer) {
-        const impact = (nextBall.y - nextPlayerY) / (PADDLE_HEIGHT / 2);
+        const impact = (playerContactY - playerYAtContact) / (PADDLE_HEIGHT / 2);
         nextBall = {
           ...nextBall,
           x: PLAYER_X + 2.2,
@@ -223,12 +267,16 @@ export function usePingPongGame({ winningScore, onFinish }: UsePingPongGameOptio
 
       const hitOpponent =
         nextBall.vx > 0 &&
-        previousBallRight <= OPPONENT_X - 1.5 &&
-        nextBallRight >= OPPONENT_X - 1.5 &&
-        isBallOverlappingPaddle(nextBall.y, opponentReachTop, opponentReachBottom);
+        nextBallRight >= opponentContactX &&
+        previousBallLeft <= opponentContactX + BALL_SIZE &&
+        isBallOverlappingPaddle(
+          opponentContactY,
+          opponentReachTopAtContact,
+          opponentReachBottomAtContact
+        );
 
       if (hitOpponent) {
-        const impact = (nextBall.y - nextOpponentY) / (PADDLE_HEIGHT / 2);
+        const impact = (opponentContactY - opponentYAtContact) / (PADDLE_HEIGHT / 2);
         nextBall = {
           ...nextBall,
           x: OPPONENT_X - 2.2,

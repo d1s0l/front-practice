@@ -7,6 +7,9 @@
   display: grid;
   place-items: center;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   padding:
     max($space-4, calc(env(safe-area-inset-top) + 0.8rem))
     max($space-4, calc(env(safe-area-inset-right) + 0.8rem))
@@ -16,6 +19,13 @@
     radial-gradient(circle at 50% 30%, rgba($color-accent-soft, 0.12), transparent 36%),
     rgba(3, 8, 15, 0.82);
   backdrop-filter: blur(14px);
+}
+
+.overlay,
+.overlay * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .overlay__panel {
