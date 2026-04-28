@@ -230,11 +230,21 @@
   }
 
   .overlay__header,
-  .overlay__hud,
   .overlay__controls,
   .overlay__result {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .overlay__hud {
+    gap: $space-2;
+    padding: $space-3;
+  }
+
+  .overlay__scoreBlock,
+  .overlay__scoreCenter {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .overlay__arena {
